@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- ============================================
+         🎨 Theme & Branding
+         ============================================ -->
+    <meta name="theme-color" content="#667eea" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- পরিবর্তন করুন → সাইটের ছোট নাম (হোম স্ক্রিনে দেখাবে) -->
+    <!-- লিখুন: BAFI Topup -->
+    <meta name="apple-mobile-web-app-title" content="BAFI Topup" />
+
+    <!-- ============================================
+         📝 SEO Meta Tags
+         ============================================ -->
+
+    <!-- পরিবর্তন করুন → সাইটের Title (Google-এ দেখাবে) -->
+    <!-- লিখুন: BAFI Topup - Fast & Secure Gaming Top-up in Bangladesh -->
+    <title>BAFI Topup - Fast & Secure Gaming Top-up in Bangladesh</title>
+
+    <!-- পরিবর্তন করুন → Description (Google-এর নিচে দেখাবে) -->
+    <!-- লিখুন: বাংলাদেশের সবচেয়ে বিশ্বস্ত গেমিং টপ-আপ প্ল্যাটফর্ম। সেকেন্ডেই টপ-আপ করুন। -->
+    <meta name="description" content="Bangladesh's most trusted gaming top-up platform. Instant top-up for Free Fire, PUBG, COD Mobile and more." />
+
+    <meta name="keywords" content="BAFI Topup, gaming top-up, free fire top-up, pubg uc, cod cp" />
+    <meta name="author" content="BAFI Topup" />
+    <meta name="robots" content="index, follow" />
+    <meta name="revisit-after" content="1 days" />
+
+    <!-- ============================================
+         🔗 Open Graph (Facebook, WhatsApp শেয়ার)
+         ============================================ -->
+
+    <!-- পরিবর্তন করুন → Facebook-এ শেয়ার করলে যা দেখাবে -->
+    <!-- লিখুন: BAFI Topup - Top-up in Seconds, Play for Hours -->
+    <meta property="og:title" content="BAFI Topup - Top-up in Seconds, Play for Hours" />
+
+    <!-- পরিবর্তন করুন → Facebook-এ শেয়ার করলে বর্ণনা -->
+    <!-- লিখুন: Bangladesh's most trusted gaming top-up platform. -->
+    <meta property="og:description" content="Bangladesh's most trusted gaming top-up platform. Instant top-up. 100% Secure payment." />
+
+    <meta property="og:image" content="/icon-512.png" />
+
+    <!-- ============================================
+         🔴🔴🔴 সবচেয়ে গুরুত্বপূর্ণ পরিবর্তন 🔴🔴🔴
+         ============================================ -->
+
+    <!-- পরিবর্তন করুন → ডোমেইন কিনলে এখানে বসান -->
+    <!-- এখন লিখুন: https://bafitopup.com -->
+    <!-- পরে ডোমেইন কিনলে: https://yourdomain.com -->
+    <meta property="og:url" content="https://bafitopup.com" />
+
+    <meta property="og:site_name" content="BAFI Topup" />
+    <meta property="og:type" content="website" />
+
+    <!-- ============================================
+         🐦 Twitter Card
+         ============================================ -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="BAFI Topup - Top-up in Seconds, Play for Hours" />
+    <meta name="twitter:description" content="Instant gaming top-up platform for Bangladesh." />
+    <meta name="twitter:image" content="/icon-512.png" />
+
+    <!-- ============================================
+         📱 PWA & Icons
+         ============================================ -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
+
+    <!-- ============================================
+         🎨 Fonts
+         ============================================ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- ============================================
+         ⚡ Performance (পরিবর্তন লাগবে না)
+         ============================================ -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://oqktbopciovcmhwwzjing.supabase.co" />
+
+    <!-- ============================================
+         🔒 Security (পরিবর্তন লাগবে না)
+         ============================================ -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+  </head>
+
+  <body>
+    <!-- ============================================
+         🚀 React Root + Loading Screen
+         ============================================ -->
+    <div id="root">
+      <div id="initial-loader">
+        <style>
+          #initial-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 9999;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          }
+          .loader-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+          }
+          .loader-text {
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            animation: pulse 1.5s ease-in-out infinite;
+          }
+          .loader-logo { font-size: 40px; margin-bottom: 15px; }
+          .loader-tagline {
+            color: rgba(255,255,255,0.8);
+            font-size: 12px;
+            margin-top: 10px;
+            font-style: italic;
+          }
+          @keyframes spin { to { transform: rotate(360deg); } }
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+          }
+        </style>
+        <img src="/icon-192.png" class="loader-logo" style="width: 80px; height: 80px; border-radius: 20px; object-fit: cover;" />
+        <div class="loader-spinner"></div>
+
+        <!-- পরিবর্তন করুন → Loading Screen-এ সাইটের নাম -->
+        <!-- লিখুন: BAFI Topup -->
+        <div class="loader-text">BAFI Topup</div>
+
+        <!-- পরিবর্তন করুন → Loading Screen-এ Tagline -->
+        <!-- লিখুন: Top-up in Seconds, Play for Hours -->
+        <div class="loader-tagline">Top-up in Seconds, Play for Hours</div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.jsx"></script>
+
+    <!-- ============================================
+         📱 Service Worker (PWA - পরিবর্তন লাগবে না)
+         ============================================ -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('/sw.js')
+            .then((registration) => {
+              console.log('✅ Service Worker registered:', registration.scope);
+            })
+            .catch((error) => {
+              console.error('❌ Service Worker failed:', error);
+            });
+        });
+      }
+
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const loader = document.getElementById('initial-loader');
+          if (loader) {
+            loader.style.opacity = '0';
+            loader.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => loader.remove(), 300);
+          }
+        }, 500);
+      });
+    </script>
+
+    <!-- ============================================
+         🛡️ NoScript Fallback
+         ============================================ -->
+    <noscript>
+      <div style="padding: 20px; text-align: center; font-family: sans-serif;">
+        <h1>JavaScript Required</h1>
+
+        <!-- পরিবর্তন করুন → সাইটের নাম -->
+        <!-- লিখুন: BAFI Topup -->
+        <p>BAFI Topup requires JavaScript. Please enable it in your browser.</p>
+      </div>
+    </noscript>
+  </body>
+</html>
