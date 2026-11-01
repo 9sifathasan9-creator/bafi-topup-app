@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 // Credentials .env.local থেকে আসবে
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('❌ Supabase credentials missing! Check .env.local');
