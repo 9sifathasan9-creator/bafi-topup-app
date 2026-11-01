@@ -1,5 +1,5 @@
-const CACHE_NAME = 'bafi-topup-v2';
-const RUNTIME_CACHE = 'bafi-runtime-v2';
+const CACHE_NAME = 'bafi-topup-v3';
+const RUNTIME_CACHE = 'bafi-runtime-v3';
 const PRECACHE_URLS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
