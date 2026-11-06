@@ -1,12 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-// 🔴 এখানে সরাসরি আপনার URL এবং Key বসানো হলো
 const supabaseUrl = 'https://oqktbopciovcmhwwzjing.supabase.co';
 const supabaseAnonKey = 'sb_publishable_Sk2-W1WuR1Es5d0mvsNBag_VMm7Yfn_';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export const ADMIN_EMAIL = '9sifathasan9@gmail.com';
 
+// ============================================
+// 📋 doCopy
+// ============================================
 export const doCopy = (text) => {
   if (!text) return;
   if (navigator.clipboard) {
@@ -15,7 +17,6 @@ export const doCopy = (text) => {
     fallbackCopy(text);
   }
 };
-
 function fallbackCopy(text) {
   const el = document.createElement('textarea');
   el.value = text;
@@ -110,7 +111,7 @@ export const updateProfile = async (userId, updates) => {
 };
 
 // ============================================
-// 💰 WALLET
+// 💰 WALLET & TRANSACTIONS
 // ============================================
 export const getWallet = async (userId) => {
   const { data, error } = await supabase.from('wallets').select('*').eq('user_id', userId).single();
@@ -128,10 +129,6 @@ export const updateWallet = async (userId, balance) => {
   if (error) { console.error(error); return null; }
   return data?.[0];
 };
-
-// ============================================
-// 📜 TRANSACTIONS & ORDERS
-// ============================================
 export const getTransactions = async (userId) => {
   const { data, error } = await supabase.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false });
   if (error) { console.error(error); return []; }
@@ -142,6 +139,10 @@ export const addTransaction = async (transaction) => {
   if (error) { console.error(error); return null; }
   return data?.[0];
 };
+
+// ============================================
+// 📦 ORDERS
+// ============================================
 export const getOrders = async (userId) => {
   const { data, error } = await supabase.from('orders').select('*').eq('user_id', userId).order('created_at', { ascending: false });
   if (error) { console.error(error); return []; }
@@ -236,4 +237,20 @@ export const toggleFavorite = async (userId, gameId) => {
   }
   await supabase.from('favorites').insert([{ user_id: userId, game_id: gameId }]);
   return true;
+};
+
+// ============================================
+// 📊 ANALYTICS
+// ============================================
+export const getAnalytics = async () => {
+  const [usersRes, gamesRes, ordersRes, txRes] = await Promise.all([
+    supabase.from('profiles').select('*', { count: 'exact', head: true }),
+    supabase.from('games').select('*', { count: 'exact', head: true }),
+    supabase.from('orders').select('*', { count: 'exact', head: true }),
+    supabase.from('transactions').select('*', { count: 'exact', head: true }),
+  ]);
+  return {
+    totalUsers: usersRes.count || 0, totalGames: gamesRes.count || 0,
+    totalOrders: ordersRes.count || 0, totalTransactions: txRes.count || 0,
+  };
 };
