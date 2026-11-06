@@ -1,0 +1,27 @@
+{
+  "name": "BAFI Topup - Gaming Top-up Platform",
+  "short_name": "BAFI Topup",
+  "description": "Top-up in Seconds, Play for Hours. Bangladesh's most trusted gaming top-up platform.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#667eea",
+  "theme_color": "#667eea",
+  "lang": "en",
+  "categories": ["games", "shopping", "finance"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

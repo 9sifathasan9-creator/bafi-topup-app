@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <!-- হোম পেজ -->
+  <url>
+    <loc>https://bafitopup.com/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- গেমস পেজ -->
+  <url>
+    <loc>https://bafitopup.com/games</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- আমাদের সম্পর্কে -->
+  <url>
+    <loc>https://bafitopup.com/about</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- যোগাযোগ -->
+  <url>
+    <loc>https://bafitopup.com/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- সাধারণ প্রশ্ন (FAQ) -->
+  <url>
+    <loc>https://bafitopup.com/faq</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- ব্লগ -->
+  <url>
+    <loc>https://bafitopup.com/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- শর্তাবলী -->
+  <url>
+    <loc>https://bafitopup.com/terms</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- প্রাইভেসি পলিসি -->
+  <url>
+    <loc>https://bafitopup.com/privacy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+</urlset>
