@@ -181,3 +181,59 @@ export const deleteReview = async (id) => {
   if (error) { console.error(error); return false; }
   return true;
 };
+
+// ============================================
+// 💬 SUPPORT TICKETS
+// ============================================
+export const getTickets = async (userId) => {
+  const { data, error } = await supabase.from('tickets').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+  if (error) { console.error(error); return []; }
+  return data || [];
+};
+export const addTicket = async (ticket) => {
+  const { data, error } = await supabase.from('tickets').insert([ticket]).select();
+  if (error) { console.error(error); return null; }
+  return data?.[0];
+};
+export const updateTicketStatus = async (id, status) => {
+  const { data, error } = await supabase.from('tickets').update({ status }).eq('id', id).select();
+  if (error) { console.error(error); return null; }
+  return data?.[0];
+};
+
+// ============================================
+// 🎟️ COUPONS
+// ============================================
+export const getCoupons = async () => {
+  const { data, error } = await supabase.from('coupons').select('*').order('created_at', { ascending: false });
+  if (error) { console.error(error); return []; }
+  return data || [];
+};
+export const validateCoupon = async (code) => {
+  const { data, error } = await supabase.from('coupons').select('*').eq('code', code).eq('active', true).single();
+  if (error) return null;
+  return data;
+};
+export const addCoupon = async (coupon) => {
+  const { data, error } = await supabase.from('coupons').insert([coupon]).select();
+  if (error) { console.error(error); return null; }
+  return data?.[0];
+};
+
+// ============================================
+// ❤️ FAVORITES
+// ============================================
+export const getFavorites = async (userId) => {
+  const { data, error } = await supabase.from('favorites').select('*').eq('user_id', userId);
+  if (error) { console.error(error); return []; }
+  return data || [];
+};
+export const toggleFavorite = async (userId, gameId) => {
+  const { data: existing } = await supabase.from('favorites').select('id').eq('user_id', userId).eq('game_id', gameId).single();
+  if (existing) {
+    await supabase.from('favorites').delete().eq('id', existing.id);
+    return false;
+  }
+  await supabase.from('favorites').insert([{ user_id: userId, game_id: gameId }]);
+  return true;
+};
