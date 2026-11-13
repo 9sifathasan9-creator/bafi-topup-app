@@ -20,7 +20,6 @@ const Home = () => {
     };
     fetchNotice();
 
-    // React StrictMode-এর ডাবল লোডিং এড়াতে ইউনিক আইডি তৈরি
     const uniqueId = Math.random().toString(36).substring(2, 9);
     const channel = supabase
       .channel(`public:notices-${uniqueId}`)
@@ -32,15 +31,13 @@ const Home = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <div style={{backgroundColor: "red", color: "white", padding: "10px", fontSize: "12px", zIndex: 9999}}>
-        <p><strong>DEBUG INFO:</strong></p>
-        <p>Loading: {loading ? "Yes" : "No"}</p>
-        <p>Total Games Found: {filteredGames ? filteredGames.length : "0"}</p>
-        <p>Error: {error ? error : "No Error"}</p>
+      {/* 🔍 ডিবাগ বক্স (নিরাপদ) */}
+      <div style={{backgroundColor: "#fbbf24", color: "#000", padding: "8px", fontSize: "12px", zIndex: 9999, textAlign: "center"}}>
+        <strong>Debug:</strong> Loading = {loading ? "Yes" : "No"} | Games Found = {filteredGames ? filteredGames.length : "0"}
       </div>
+
       <section className="px-4 pt-8 pb-4 flex-1">
         <div className="max-w-5xl mx-auto flex flex-col items-center justify-center text-center">
-          
           <div className="flex flex-col items-center justify-center mb-6">
             <div className="glow-effect p-1 bg-gradient-to-br from-purple-500 to-blue-500 rounded-[1.5rem] mb-4">
               <img src="/icon-192.png" alt="BAFI Topup" className="w-20 h-20 rounded-2xl object-cover" />
