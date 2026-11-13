@@ -32,6 +32,12 @@ const Home = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <div style={{backgroundColor: "red", color: "white", padding: "10px", fontSize: "12px", zIndex: 9999}}>
+        <p><strong>DEBUG INFO:</strong></p>
+        <p>Loading: {loading ? "Yes" : "No"}</p>
+        <p>Total Games Found: {filteredGames ? filteredGames.length : "0"}</p>
+        <p>Error: {error ? error : "No Error"}</p>
+      </div>
       <section className="px-4 pt-8 pb-4 flex-1">
         <div className="max-w-5xl mx-auto flex flex-col items-center justify-center text-center">
           
