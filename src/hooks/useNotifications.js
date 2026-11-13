@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { useNotification as useNotificationContext } from '../context/NotificationContext';
 import { supabase } from '../supabaseClient';
 
@@ -6,9 +6,11 @@ export const useNotifications = () => {
   const notification = useNotificationContext();
 
   useEffect(() => {
-    // খেয়াল করুন: .on() কলগুলো .subscribe() এর আগে করতে হবে
+    // React StrictMode-এর ডাবল লোডিং এড়াতে ইউনিক আইডি তৈরি
+    const uniqueId = Math.random().toString(36).substring(2, 9);
+
     const gamesChannel = supabase
-      .channel('notif-games')
+      .channel(`notif-games-${uniqueId}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'games' },
@@ -26,7 +28,7 @@ export const useNotifications = () => {
       .subscribe();
 
     const noticesChannel = supabase
-      .channel('notif-notices')
+      .channel(`notif-notices-${uniqueId}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'notices' },
@@ -43,7 +45,6 @@ export const useNotifications = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ... বাকি হেল্পার ফাংশনগুলো আগের মতোই থাকবে ...
   return {
     ...notification,
     notifyGameAdded: (name) => notification.showSuccess(`🎮 Game added: ${name}`),
