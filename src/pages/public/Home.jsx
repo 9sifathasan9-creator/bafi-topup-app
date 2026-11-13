@@ -20,7 +20,10 @@ const Home = () => {
     };
     fetchNotice();
 
-    const channel = supabase.channel('public:notices')
+    // React StrictMode-এর ডাবল লোডিং এড়াতে ইউনিক আইডি তৈরি
+    const uniqueId = Math.random().toString(36).substring(2, 9);
+    const channel = supabase
+      .channel(`public:notices-${uniqueId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notices' }, () => fetchNotice())
       .subscribe();
 
