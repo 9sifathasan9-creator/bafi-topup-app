@@ -34,7 +34,7 @@ function fallbackCopy(text) {
 // ============================================
 export const getGames = async () => {
   const { data, error } = await supabase.from('games').select('*').order('created_at', { ascending: false });
-  if (error) { console.error(error); return []; }
+  if (error) { throw new Error(error.message); }
   return data || [];
 };
 
@@ -67,7 +67,7 @@ export const deleteGame = async (id) => {
 // ============================================
 export const getNotices = async () => {
   const { data, error } = await supabase.from('notices').select('*').order('created_at', { ascending: false });
-  if (error) { console.error(error); return []; }
+  if (error) { throw new Error(error.message); }
   return data || [];
 };
 
@@ -151,7 +151,7 @@ export const updateWallet = async (userId, balance) => {
 // ============================================
 export const getTransactions = async (userId) => {
   const { data, error } = await supabase.from('transactions').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-  if (error) { console.error(error); return []; }
+  if (error) { throw new Error(error.message); }
   return data || [];
 };
 
@@ -166,13 +166,13 @@ export const addTransaction = async (transaction) => {
 // ============================================
 export const getOrders = async (userId) => {
   const { data, error } = await supabase.from('orders').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-  if (error) { console.error(error); return []; }
+  if (error) { throw new Error(error.message); }
   return data || [];
 };
 
 export const getAllOrders = async () => {
   const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
-  if (error) { console.error(error); return []; }
+  if (error) { throw new Error(error.message); }
   return data || [];
 };
 
@@ -193,7 +193,7 @@ export const updateOrder = async (id, updates) => {
 // ============================================
 export const getReviews = async (gameId) => {
   const { data, error } = await supabase.from('reviews').select('*').eq('game_id', gameId).order('created_at', { ascending: false });
-  if (error) { console.error(error); return []; }
+  if (error) { throw new Error(error.message); }
   return data || [];
 };
 
@@ -214,7 +214,7 @@ export const deleteReview = async (id) => {
 // ============================================
 export const getFavorites = async (userId) => {
   const { data, error } = await supabase.from('favorites').select('*').eq('user_id', userId);
-  if (error) { console.error(error); return []; }
+  if (error) { throw new Error(error.message); }
   return data || [];
 };
 
@@ -233,7 +233,7 @@ export const toggleFavorite = async (userId, gameId) => {
 // ============================================
 export const getCoupons = async () => {
   const { data, error } = await supabase.from('coupons').select('*').order('created_at', { ascending: false });
-  if (error) { console.error(error); return []; }
+  if (error) { throw new Error(error.message); }
   return data || [];
 };
 

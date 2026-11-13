@@ -13,6 +13,9 @@ const Home = () => {
   const { filteredGames, loading, error, refresh } = useGames();
   const [notice, setNotice] = useState(null);
 
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
   useEffect(() => {
     const fetchNotice = async () => {
       const { data } = await supabase.from('notices').select('*').order('created_at', { ascending: false }).limit(1).single();
@@ -25,8 +28,10 @@ const Home = () => {
     <div className="min-h-screen flex flex-col">
       {/* 🔍 ডিবাগ বক্স */}
       <div style={{backgroundColor: "#fbbf24", color: "#000", padding: "8px", fontSize: "11px", zIndex: 9999, textAlign: "center", wordBreak: "break-all"}}>
-        <p><strong>Live URL:</strong> {import.meta.env.VITE_SUPABASE_URL}</p>
-        <p><strong>Games:</strong> {filteredGames ? filteredGames.length : "0"} | <strong>Error:</strong> {error ? error : "None"}</p>
+        <p><strong>URL:</strong> {url}</p>
+        <p><strong>Key Start:</strong> {key ? key.substring(0, 15) : "MISSING"}</p>
+        <p style={{color: error ? "red" : "black"}}><strong>Error:</strong> {error ? error : "None"}</p>
+        <p><strong>Games Loaded:</strong> {filteredGames ? filteredGames.length : "0"}</p>
         <button onClick={refresh} style={{backgroundColor:"#000", color:"#fff", padding:"4px 8px", borderRadius:"4px", marginTop:"4px"}}>Force Refresh</button>
       </div>
 
