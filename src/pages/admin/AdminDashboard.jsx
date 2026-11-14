@@ -46,7 +46,7 @@ const AdminDashboard = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         <StatsCard icon={Users} label={t('totalUsers') || 'Total Users'} value={stats.totalUsers} color="purple" trend="up" change={12} />
         <StatsCard icon={Gamepad2} label={t('totalGames') || 'Total Games'} value={stats.totalGames} color="blue" trend="up" change={5} />
         <StatsCard icon={ShoppingCart} label={t('totalOrders') || 'Total Orders'} value={stats.totalOrders} color="green" trend="up" change={8} />
@@ -58,7 +58,13 @@ const AdminDashboard = () => {
         <RevenueChart data={chartData} />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <Link to={ROUTES.ADMIN_NOTICES}>
+          <Card variant="gaming" padding="md" hover clickable className="text-center h-full">
+            <Bell className="w-8 h-8 text-pink-500 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-gray-800 dark:text-white">Manage Notices</p>
+          </Card>
+        </Link>
         <Link to={ROUTES.ADMIN_GAMES}>
           <Card variant="gaming" padding="md" hover clickable className="text-center">
             <Gamepad2 className="w-8 h-8 text-purple-500 mx-auto mb-2" />
