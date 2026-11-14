@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Gamepad2, ShoppingCart, CreditCard, TrendingUp, DollarSign, Package } from 'lucide-react';
+import { Users, Gamepad2, ShoppingCart, CreditCard, TrendingUp, BarChart3, Bell, Settings } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
 import { getAnalytics } from '../../supabaseClient';
@@ -18,9 +18,14 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const load = async () => {
-      const data = await getAnalytics();
-      setStats(data || {});
-      setLoading(false);
+      try {
+        const data = await getAnalytics();
+        setStats(data || {});
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
@@ -35,6 +40,14 @@ const AdminDashboard = () => {
     { name: 'Sun', value: 28 },
   ];
 
+  const menuItems = [
+    { id: 'games', label: t('manageGames') || 'Manage Games', icon: Gamepad2, color: 'text-purple-500', path: ROUTES.ADMIN_GAMES },
+    { id: 'orders', label: t('manageOrders') || 'Manage Orders', icon: ShoppingCart, color: 'text-green-500', path: ROUTES.ADMIN_ORDERS },
+    { id: 'users', label: t('manageUsers') || 'Manage Users', icon: Users, color: 'text-blue-500', path: ROUTES.ADMIN_USERS },
+    { id: 'notices', label: t('manageNotices') || 'Manage Notices', icon: Bell, color: 'text-pink-500', path: ROUTES.ADMIN_NOTICES },
+    { id: 'settings', label: t('settings') || 'Settings', icon: Settings, color: 'text-yellow-500', path: ROUTES.ADMIN_SETTINGS },
+  ];
+
   return (
     <div className="space-y-5">
       <div>
@@ -46,49 +59,33 @@ const AdminDashboard = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        <StatsCard icon={Users} label={t('totalUsers') || 'Total Users'} value={stats.totalUsers} color="purple" trend="up" change={12} />
-        <StatsCard icon={Gamepad2} label={t('totalGames') || 'Total Games'} value={stats.totalGames} color="blue" trend="up" change={5} />
-        <StatsCard icon={ShoppingCart} label={t('totalOrders') || 'Total Orders'} value={stats.totalOrders} color="green" trend="up" change={8} />
-        <StatsCard icon={CreditCard} label={t('totalTransactions') || 'Transactions'} value={stats.totalTransactions} color="yellow" trend="down" change={-3} />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatsCard icon={Users} label={t('totalUsers') || 'Total Users'} value={stats.totalUsers} color="purple" />
+        <StatsCard icon={Gamepad2} label={t('totalGames') || 'Total Games'} value={stats.totalGames} color="blue" />
+        <StatsCard icon={ShoppingCart} label={t('totalOrders') || 'Total Orders'} value={stats.totalOrders} color="green" />
+        <StatsCard icon={CreditCard} label={t('totalTransactions') || 'Transactions'} value={stats.totalTransactions} color="yellow" />
       </div>
 
+      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <AnalyticsChart data={chartData} title={t('weeklyActivity') || 'Weekly Activity'} />
         <RevenueChart data={chartData} />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        <Link to={ROUTES.ADMIN_NOTICES}>
-          <Card variant="gaming" padding="md" hover clickable className="text-center h-full">
-            <Bell className="w-8 h-8 text-pink-500 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-gray-800 dark:text-white">Manage Notices</p>
-          </Card>
-        </Link>
-        <Link to={ROUTES.ADMIN_GAMES}>
-          <Card variant="gaming" padding="md" hover clickable className="text-center">
-            <Gamepad2 className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-gray-800 dark:text-white">{t('manageGames') || 'Manage Games'}</p>
-          </Card>
-        </Link>
-        <Link to={ROUTES.ADMIN_ORDERS}>
-          <Card variant="gaming" padding="md" hover clickable className="text-center">
-            <ShoppingCart className="w-8 h-8 text-green-500 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-gray-800 dark:text-white">{t('manageOrders') || 'Manage Orders'}</p>
-          </Card>
-        </Link>
-        <Link to={ROUTES.ADMIN_USERS}>
-          <Card variant="gaming" padding="md" hover clickable className="text-center">
-            <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-gray-800 dark:text-white">{t('manageUsers') || 'Manage Users'}</p>
-          </Card>
-        </Link>
-        <Link to={ROUTES.ADMIN_SETTINGS}>
-          <Card variant="gaming" padding="md" hover clickable className="text-center">
-            <Package className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-gray-800 dark:text-white">{t('settings') || 'Settings'}</p>
-          </Card>
-        </Link>
+      {/* Quick Action Buttons */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-6">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link key={item.id} to={item.path}>
+              <Card variant="gaming" padding="md" hover clickable className="text-center h-full flex flex-col items-center justify-center gap-2 py-5">
+                <Icon className={`w-8 h-8 ${item.color}`} />
+                <p className="text-xs font-bold text-gray-800 dark:text-white leading-tight">{item.label}</p>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
