@@ -55,7 +55,7 @@ const NotificationBell = () => {
         className="relative p-2 bg-white dark:bg-white/10 shadow-sm border border-gray-200 dark:border-none backdrop-blur-lg rounded-lg text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-white/20 transition"
         aria-label="Notifications"
       >
-        <Bell className="w-5 h-5" />
+        <Bell className="w-4 h-4" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
             {unreadCount > 9 ? '9+' : unreadCount}
