@@ -4,7 +4,7 @@ import { Lock, Mail, AlertCircle, Eye, EyeOff, Loader2, User, Phone } from 'luci
 import { supabase } from '../../supabaseClient';
 import { useLanguage } from '../../context/LanguageContext';
 import { ROUTES } from '../../utils/constants';
-import { isValidEmail, isValidName, isValidPhone, isValidPassword } from '../../utils/validators';
+import { isValidName, isValidPhone, isValidPassword } from '../../utils/validators';
 
 const STRICT_EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -74,11 +74,9 @@ const Login = () => {
         return;
       }
       
-      // Auto login after register (if email confirm is disabled in Supabase)
       if (data.session) {
         navigate(ROUTES.USER_DASHBOARD, { replace: true });
       } else {
-        // If email confirmation is required
         navigate(ROUTES.LOGIN, { replace: true });
         setError('Please check your email to confirm your account.');
       }
@@ -104,10 +102,10 @@ const Login = () => {
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
       <div className="gaming-card w-full max-w-md p-6 sm:p-8">
         
-        {/* Logo & Title */}
+        {/* Logo & Title (লোগো বসানো হয়েছে) */}
         <div className="text-center mb-6">
-          <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-purple-500/30">
-            <Lock className="w-7 h-7 text-white" />
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-purple-500/30 p-1">
+            <img src="/icon-192.png" alt="BAFI Topup" className="w-full h-full rounded-xl object-cover" />
           </div>
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
             {mode === 'login' ? 'Welcome Back' : 'Create Account'}
@@ -118,7 +116,7 @@ const Login = () => {
         </div>
 
         {/* Mode Toggle (Login / Sign Up) */}
-        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-6">
+        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-2">
           <button
             onClick={() => { setMode('login'); setError(''); }}
             className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${mode === 'login' ? 'bg-white dark:bg-gray-700 text-purple-600 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'}`}
@@ -131,6 +129,16 @@ const Login = () => {
           >
             Sign Up / সাইন আপ
           </button>
+        </div>
+
+        {/* নতুন লেখা যোগ করা হয়েছে */}
+        <div className="flex justify-between px-1 mb-5">
+          <p className="text-[10px] text-gray-400 dark:text-gray-300 font-medium w-1/2 text-center">
+            For existing users / পুরনো ইউজারদের জন্য
+          </p>
+          <p className="text-[10px] text-gray-400 dark:text-gray-300 font-medium w-1/2 text-center">
+            For new users / নতুন ইউজারদের জন্য
+          </p>
         </div>
 
         {error && (
