@@ -40,41 +40,46 @@ const NotificationBell = () => {
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          {/* মোবাইলের জন্য ফিক্সড পজিশন, ডেস্কটপের জন্য অ্যাবসোলিউট */}
-          <div className="fixed top-16 left-1/2 -translate-x-1/2 w-[90vw] max-w-sm sm:absolute sm:top-full sm:right-0 sm:left-auto sm:translate-x-0 sm:w-80 bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden z-50 border border-gray-200 dark:border-gray-700 animate-slide-down">
-            
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-              <h3 className="font-bold text-gray-800 dark:text-white text-sm">
-                {t('notifications')} {unreadCount > 0 && `(${unreadCount})`}
-              </h3>
-              {notifications.length > 0 && (
-                <div className="flex items-center gap-1">
-                  <button onClick={markAllRead} className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition" title="Mark all read"><Check className="w-4 h-4" /></button>
-                  <button onClick={clearAll} className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition" title="Clear all"><Trash2 className="w-4 h-4" /></button>
-                </div>
-              )}
-            </div>
-
-            <div className="max-h-[60vh] overflow-y-auto">
-              {notifications.length === 0 ? (
-                <div className="py-12 text-center">
-                  <Bell className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{t('noNotifications')}</p>
-                </div>
-              ) : (
-                notifications.map((notif) => (
-                  <div key={notif.id} className={`relative px-4 py-3 border-b border-gray-100 dark:border-gray-700 border-l-4 transition hover:bg-gray-50 dark:hover:bg-gray-700/50 ${getTypeColor(notif.type)}`}>
-                    <div className="flex items-start gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-800 dark:text-white break-words">{notif.message}</p>
-                        <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{new Date(notif.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
-                      </div>
-                      <button onClick={() => removeNotification(notif.id)} className="text-gray-400 hover:text-red-500 transition flex-shrink-0"><X className="w-4 h-4" /></button>
-                    </div>
-                    {!notif.read && <span className="absolute top-3 right-9 w-2 h-2 bg-blue-500 rounded-full" />}
+          
+          {/* মোবাইলে একদম মাঝখানে আনার জন্য flex wrapper ব্যবহার করা হয়েছে */}
+          <div className="fixed top-[60px] inset-x-0 z-50 flex justify-center pointer-events-none px-4">
+            <div 
+              className="w-full max-w-sm bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700 pointer-events-auto animate-scale-in"
+              style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex-shrink-0">
+                <h3 className="font-bold text-gray-800 dark:text-white text-sm">
+                  {t('notifications')} {unreadCount > 0 && `(${unreadCount})`}
+                </h3>
+                {notifications.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <button onClick={markAllRead} className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition" title="Mark all read"><Check className="w-4 h-4" /></button>
+                    <button onClick={clearAll} className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition" title="Clear all"><Trash2 className="w-4 h-4" /></button>
                   </div>
-                ))
-              )}
+                )}
+              </div>
+
+              <div className="overflow-y-auto custom-scrollbar flex-1">
+                {notifications.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <Bell className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{t('noNotifications')}</p>
+                  </div>
+                ) : (
+                  notifications.map((notif) => (
+                    <div key={notif.id} className={`relative px-4 py-3 border-b border-gray-100 dark:border-gray-700 border-l-4 transition hover:bg-gray-50 dark:hover:bg-gray-700/50 ${getTypeColor(notif.type)}`}>
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-800 dark:text-white break-words">{notif.message}</p>
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{new Date(notif.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                        <button onClick={() => removeNotification(notif.id)} className="text-gray-400 hover:text-red-500 transition flex-shrink-0"><X className="w-4 h-4" /></button>
+                      </div>
+                      {!notif.read && <span className="absolute top-3 right-9 w-2 h-2 bg-blue-500 rounded-full" />}
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         </>

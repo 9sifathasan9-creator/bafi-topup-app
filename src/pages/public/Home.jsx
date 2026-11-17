@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Zap, Shield, Trophy, ArrowRight, Megaphone, X } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
@@ -13,10 +13,13 @@ const Home = () => {
   const { filteredGames, loading } = useGames();
   const [notices, setNotices] = useState([]);
   const [currentNotice, setCurrentNotice] = useState(0);
-  const [selectedNotice, setSelectedNotice] = useState(null); // ফুল স্ক্রিন নোটিশের জন্য
-  const [isInteracting, setIsInteracting] = useState(false); // ইউজার টাচ করলে স্লাইড বন্ধ রাখার জন্য
+  const [selectedNotice, setSelectedNotice] = useState(null);
+  const [isInteracting, setIsInteracting] = useState(false);
 
-  // নোটিশ লোড করা
+  // সোয়াইপ ডিটেকশনের জন্য
+  const touchStartX = useRef(null);
+  const touchEndX = useRef(null);
+
   useEffect(() => {
     const fetchNotices = async () => {
       const { data } = await supabase.from('notices').select('*').order('created_at', { ascending: false }).limit(5);
@@ -31,7 +34,6 @@ const Home = () => {
     return () => supabase.removeChannel(channel);
   }, []);
 
-  // স্লাইডার অটো প্লে (৩ সেকেন্ড পর পর, যদি ইউজার ইন্টার‌্যাক্ট না করে)
   useEffect(() => {
     if (notices.length <= 1 || isInteracting) return;
     const interval = setInterval(() => {
@@ -40,12 +42,42 @@ const Home = () => {
     return () => clearInterval(interval);
   }, [notices, isInteracting]);
 
+  // সোয়াইপ হ্যান্ডলার
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+    setIsInteracting(true);
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) {
+      setIsInteracting(false);
+      return;
+    }
+    const distance = touchStartX.current - touchEndX.current;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      setCurrentNotice((prev) => (prev + 1) % notices.length);
+    } else if (isRightSwipe) {
+      setCurrentNotice((prev) => (prev - 1 + notices.length) % notices.length);
+    }
+    
+    // ৩ সেকেন্ড পর আবার অটো স্লাইড চালু হবে
+    setTimeout(() => setIsInteracting(false), 3000); 
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <section className="px-3 pt-4 pb-2 flex-1">
         <div className="max-w-5xl mx-auto flex flex-col items-center justify-center text-center">
           
-          {/* Logo & Title */}
           <div className="flex flex-col items-center justify-center mb-3">
             <div className="glow-effect p-0.5 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl mb-2">
               <img src="/icon-192.png" alt="BAFI Topup" className="w-14 h-14 rounded-xl object-cover" />
@@ -58,16 +90,15 @@ const Home = () => {
             </p>
           </div>
 
-          {/* 🔥 নতুন বড় স্লাইডিং নোটিশ বোর্ড */}
+          {/* স্লাইডিং নোটিশ বোর্ড (টাচ সোয়াইপ সহ) */}
           {notices.length > 0 && (
-            <div 
-              className="w-full max-w-md mx-auto mb-4 mt-2 relative"
-              onMouseEnter={() => setIsInteracting(true)}
-              onMouseLeave={() => setIsInteracting(false)}
-              onTouchStart={() => setIsInteracting(true)}
-              onTouchEnd={() => setTimeout(() => setIsInteracting(false), 5000)} // টাচ করার ৫ সেকেন্ড পর আবার চালু হবে
-            >
-              <div className="overflow-hidden rounded-xl border border-purple-500/30 bg-gray-900/60 backdrop-blur-md shadow-lg">
+            <div className="w-full max-w-md mx-auto mb-4 mt-2 relative">
+              <div 
+                className="overflow-hidden rounded-xl border border-purple-500/30 bg-gray-900/60 backdrop-blur-md shadow-lg touch-pan-y"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
                 <div 
                   className="flex transition-transform duration-500 ease-in-out" 
                   style={{ transform: `translateX(-${currentNotice * 100}%)` }}
@@ -88,7 +119,6 @@ const Home = () => {
                             <span className="w-1 h-1 bg-red-500 rounded-full animate-pulse"></span> LIVE
                           </span>
                         </div>
-                        {/* লেখা এখন ২ লাইন পর্যন্ত দেখা যাবে */}
                         <p className="text-xs text-gray-300 line-clamp-2">{notice.content}</p>
                       </div>
                       {notice.image_url && (
@@ -100,13 +130,14 @@ const Home = () => {
                   ))}
                 </div>
               </div>
-              {/* ডট ইন্ডিকেটর (ম্যানুয়াল ক্লিক করে স্ক্রল করা যাবে) */}
+              
+              {/* ডট ইন্ডিকেটর */}
               {notices.length > 1 && (
                 <div className="flex justify-center gap-1.5 mt-3">
                   {notices.map((_, idx) => (
                     <button 
                       key={idx} 
-                      onClick={() => { setCurrentNotice(idx); setIsInteracting(true); }} 
+                      onClick={() => { setCurrentNotice(idx); setIsInteracting(true); setTimeout(()=>setIsInteracting(false), 3000); }} 
                       className={`h-1.5 rounded-full transition-all duration-300 ${currentNotice === idx ? 'bg-purple-500 w-5' : 'bg-gray-600 w-1.5 hover:bg-gray-400'}`} 
                     />
                   ))}
@@ -115,7 +146,6 @@ const Home = () => {
             </div>
           )}
 
-          {/* Feature Badges */}
           <div className="flex flex-wrap justify-center gap-1.5 w-full max-w-xs mx-auto mb-4">
             <span className="px-2 py-1 rounded-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-[9px] font-bold text-slate-700 dark:text-gray-300 flex items-center gap-1 shadow-sm">
               <Zap className="w-2.5 h-2.5 text-purple-500" /> Instant
@@ -142,15 +172,15 @@ const Home = () => {
         </div>
       </section>
 
-      {/* 🔥 ফুল-স্ক্রিন নোটিশ মডাল (ক্লিক করলে পুরোটা পড়া যাবে) */}
+      {/* 🔥 ফুল-স্ক্রিন নোটিশ মডাল (স্ক্রলযোগ্য) */}
       {selectedNotice && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedNotice(null)}>
           <div 
-            className="bg-gray-900 border border-gray-700 w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl animate-scale-in max-h-[90vh] flex flex-col"
+            className="bg-gray-900 border border-gray-700 w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl animate-scale-in flex flex-col"
+            style={{ maxHeight: '85vh' }} /* মোবাইল স্ক্রিনের ৮৫% জুড়ে থাকবে */
             onClick={(e) => e.stopPropagation()}
           >
-            {/* মডাল হেডার */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-900/50">
+            <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-900/50 flex-shrink-0">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <Megaphone className="w-5 h-5 text-purple-400" /> Notice Details
               </h2>
@@ -159,11 +189,11 @@ const Home = () => {
               </button>
             </div>
             
-            {/* মডাল বডি (স্ক্রলযোগ্য) */}
+            {/* এই div-এ overflow-y-auto দেওয়া হয়েছে যাতে লম্বা লেখা স্ক্রল করা যায় */}
             <div className="p-5 overflow-y-auto custom-scrollbar flex-1">
               {selectedNotice.image_url && (
                 <div className="w-full mb-4 rounded-xl overflow-hidden border border-gray-700 bg-black/20">
-                  <img src={selectedNotice.image_url} alt="Notice" className="w-full h-auto object-contain max-h-64" />
+                  <img src={selectedNotice.image_url} alt="Notice" className="w-full h-auto object-contain" />
                 </div>
               )}
               <h3 className="text-xl font-bold text-white mb-2">{selectedNotice.title}</h3>
@@ -175,8 +205,7 @@ const Home = () => {
               </p>
             </div>
             
-            {/* মডাল ফুটার */}
-            <div className="p-4 border-t border-gray-800 bg-gray-900/50">
+            <div className="p-4 border-t border-gray-800 bg-gray-900/50 flex-shrink-0">
               <button onClick={() => setSelectedNotice(null)} className="w-full py-2.5 bg-gray-800 text-white font-bold rounded-xl hover:bg-gray-700 transition">
                 Close Notice
               </button>
