@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Users, Gamepad2, ShoppingCart, CreditCard, TrendingUp, BarChart3, Bell, Settings } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
-import { getAnalytics } from '../../supabaseClient';
+import { supabase } from '../../supabaseClient';
 import { ROUTES } from '../../utils/constants';
 import StatsCard from '../../components/admin/StatsCard';
 import AnalyticsChart from '../../components/admin/AnalyticsChart';
@@ -16,28 +16,45 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({ totalUsers: 0, totalGames: 0, totalOrders: 0, totalTransactions: 0 });
   const [loading, setLoading] = useState(true);
 
+  // সরাসরি Supabase থেকে লাইভ কাউন্ট আনা
+  const fetchStats = async () => {
+    try {
+      const [usersRes, gamesRes, ordersRes, txRes] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('games').select('*', { count: 'exact', head: true }),
+        supabase.from('orders').select('*', { count: 'exact', head: true }),
+        supabase.from('transactions').select('*', { count: 'exact', head: true }),
+      ]);
+      
+      setStats({
+        totalUsers: usersRes.count || 0,
+        totalGames: gamesRes.count || 0,
+        totalOrders: ordersRes.count || 0,
+        totalTransactions: txRes.count || 0,
+      });
+    } catch (err) {
+      console.error('Stats fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await getAnalytics();
-        setStats(data || {});
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+    fetchStats();
+
+    // রিয়েল-টাইম আপডেট (যদি নতুন ইউজার যোগ হয়)
+    const channel = supabase.channel('admin-dashboard-stats')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, fetchStats)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, fetchStats)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchStats)
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
   }, []);
 
   const chartData = [
-    { name: 'Mon', value: 12 },
-    { name: 'Tue', value: 19 },
-    { name: 'Wed', value: 14 },
-    { name: 'Thu', value: 25 },
-    { name: 'Fri', value: 22 },
-    { name: 'Sat', value: 30 },
-    { name: 'Sun', value: 28 },
+    { name: 'Mon', value: 12 }, { name: 'Tue', value: 19 }, { name: 'Wed', value: 14 },
+    { name: 'Thu', value: 25 }, { name: 'Fri', value: 22 }, { name: 'Sat', value: 30 }, { name: 'Sun', value: 28 },
   ];
 
   const menuItems = [
@@ -50,30 +67,28 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-white mb-1">
-          {t('adminDashboard') || 'Admin Dashboard'}
-        </h1>
-        <p className="text-white/70 text-sm">
-          {t('welcomeBack') || 'Welcome back'}, {user?.email?.split('@')[0]}
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-white mb-1">{t('adminDashboard') || 'Admin Dashboard'}</h1>
+          <p className="text-white/70 text-sm">{t('welcomeBack') || 'Welcome back'}, {user?.email?.split('@')[0]}</p>
+        </div>
+        <button onClick={fetchStats} className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition">
+          Refresh Data
+        </button>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard icon={Users} label={t('totalUsers') || 'Total Users'} value={stats.totalUsers} color="purple" />
-        <StatsCard icon={Gamepad2} label={t('totalGames') || 'Total Games'} value={stats.totalGames} color="blue" />
-        <StatsCard icon={ShoppingCart} label={t('totalOrders') || 'Total Orders'} value={stats.totalOrders} color="green" />
-        <StatsCard icon={CreditCard} label={t('totalTransactions') || 'Transactions'} value={stats.totalTransactions} color="yellow" />
+        <StatsCard icon={Users} label={t('totalUsers') || 'Total Users'} value={loading ? '...' : stats.totalUsers} color="purple" />
+        <StatsCard icon={Gamepad2} label={t('totalGames') || 'Total Games'} value={loading ? '...' : stats.totalGames} color="blue" />
+        <StatsCard icon={ShoppingCart} label={t('totalOrders') || 'Total Orders'} value={loading ? '...' : stats.totalOrders} color="green" />
+        <StatsCard icon={CreditCard} label={t('totalTransactions') || 'Transactions'} value={loading ? '...' : stats.totalTransactions} color="yellow" />
       </div>
 
-      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <AnalyticsChart data={chartData} title={t('weeklyActivity') || 'Weekly Activity'} />
         <RevenueChart data={chartData} />
       </div>
 
-      {/* Quick Action Buttons */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-6">
         {menuItems.map((item) => {
           const Icon = item.icon;
