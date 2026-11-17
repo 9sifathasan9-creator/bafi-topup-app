@@ -28,7 +28,12 @@ const NotificationBell = () => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <button onClick={() => setIsOpen(!isOpen)} className="relative p-1.5 sm:p-2 bg-white/10 backdrop-blur-lg rounded-lg text-white hover:bg-white/20 transition" aria-label="Notifications">
+      {/* বেল বাটনের কালার লাইট ও ডার্ক মোডের সাথে মিলিয়ে ঠিক করা হয়েছে */}
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className="relative p-1.5 sm:p-2 bg-white dark:bg-white/10 shadow-sm border border-gray-200 dark:border-none backdrop-blur-lg rounded-lg text-slate-700 dark:text-white hover:bg-gray-50 dark:hover:bg-white/20 transition" 
+        aria-label="Notifications"
+      >
         <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
@@ -41,7 +46,6 @@ const NotificationBell = () => {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
           
-          {/* মোবাইলে একদম মাঝখানে আনার জন্য flex wrapper ব্যবহার করা হয়েছে */}
           <div className="fixed top-[60px] inset-x-0 z-50 flex justify-center pointer-events-none px-4">
             <div 
               className="w-full max-w-sm bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700 pointer-events-auto animate-scale-in"
