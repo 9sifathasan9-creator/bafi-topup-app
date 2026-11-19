@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Zap, Shield, Trophy, ArrowRight, Megaphone, X } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
@@ -13,6 +13,11 @@ const Home = () => {
   const [notices, setNotices] = useState([]);
   const [noticeError, setNoticeError] = useState(null);
   const [selectedNotice, setSelectedNotice] = useState(null);
+  const [currentNotice, setCurrentNotice] = useState(0);
+  const [isInteracting, setIsInteracting] = useState(false);
+
+  const touchStartX = useRef(null);
+  const touchEndX = useRef(null);
 
   const fetchNotices = async () => {
     const { data, error } = await supabase.from('notices').select('*').order('created_at', { ascending: false }).limit(5);
@@ -27,13 +32,49 @@ const Home = () => {
 
   useEffect(() => {
     fetchNotices();
-    const interval = setInterval(fetchNotices, 5000); // প্রতি ৫ সেকেন্ডে চেক
+    const interval = setInterval(fetchNotices, 10000); // প্রতি ১০ সেকেন্ডে ফলব্যাক চেক
     return () => clearInterval(interval);
   }, []);
 
+  // অটো স্লাইডার (৩ সেকেন্ড পর পর)
+  useEffect(() => {
+    if (notices.length <= 1 || isInteracting) return;
+    const interval = setInterval(() => {
+      setCurrentNotice((prev) => (prev + 1) % notices.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [notices, isInteracting]);
+
+  // সোয়াইপ হ্যান্ডলার
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+    setIsInteracting(true);
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) {
+      setIsInteracting(false);
+      return;
+    }
+    const distance = touchStartX.current - touchEndX.current;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) setCurrentNotice((prev) => (prev + 1) % notices.length);
+    else if (isRightSwipe) setCurrentNotice((prev) => (prev - 1 + notices.length) % notices.length);
+    
+    setTimeout(() => setIsInteracting(false), 3000); 
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
-      {/* 🔍 ডিবাগ বক্স (নোটিশের জন্য) */}
+      {/* 🔍 ডিবাগ বক্স */}
       <div style={{backgroundColor: "#ef4444", color: "white", padding: "4px", fontSize: "10px", textAlign: "center", zIndex: 9999}}>
         <strong>Notice Debug:</strong> Count = {notices.length} | Error = {noticeError ? noticeError : "None"}
       </div>
@@ -53,10 +94,19 @@ const Home = () => {
             </p>
           </div>
 
-          {notices.length > 0 ? (
+          {/* স্লাইডিং নোটিশ বোর্ড */}
+          {notices.length > 0 && (
             <div className="w-full max-w-md mx-auto mb-4 mt-2 relative">
-              <div className="overflow-hidden rounded-xl border border-purple-500/30 bg-gray-900/60 backdrop-blur-md shadow-lg">
-                <div className="flex">
+              <div 
+                className="overflow-hidden rounded-xl border border-purple-500/30 bg-gray-900/60 backdrop-blur-md shadow-lg touch-pan-y"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                <div 
+                  className="flex transition-transform duration-500 ease-in-out" 
+                  style={{ transform: `translateX(-${currentNotice * 100}%)` }}
+                >
                   {notices.map((notice) => (
                     <div 
                       key={notice.id} 
@@ -67,7 +117,12 @@ const Home = () => {
                         <Megaphone className="w-5 h-5 text-purple-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-bold text-white line-clamp-1">{notice.title}</h3>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <h3 className="text-sm font-bold text-white line-clamp-1">{notice.title}</h3>
+                          <span className="flex items-center gap-0.5 bg-red-500/20 text-red-400 text-[8px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">
+                            <span className="w-1 h-1 bg-red-500 rounded-full animate-pulse"></span> LIVE
+                          </span>
+                        </div>
                         <p className="text-xs text-gray-300 line-clamp-2">{notice.content}</p>
                       </div>
                       {notice.image_url && (
@@ -79,9 +134,20 @@ const Home = () => {
                   ))}
                 </div>
               </div>
+              
+              {/* ডট ইন্ডিকেটর */}
+              {notices.length > 1 && (
+                <div className="flex justify-center gap-1.5 mt-3">
+                  {notices.map((_, idx) => (
+                    <button 
+                      key={idx} 
+                      onClick={() => { setCurrentNotice(idx); setIsInteracting(true); setTimeout(()=>setIsInteracting(false), 3000); }} 
+                      className={`h-1.5 rounded-full transition-all duration-300 ${currentNotice === idx ? 'bg-purple-500 w-5' : 'bg-gray-600 w-1.5 hover:bg-gray-400'}`} 
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-          ) : (
-            <p className="text-white text-xs mb-4">No notices found in database.</p>
           )}
 
           <div className="flex flex-wrap justify-center gap-1.5 w-full max-w-xs mx-auto mb-4">
@@ -110,6 +176,7 @@ const Home = () => {
         </div>
       </section>
 
+      {/* ফুল-স্ক্রিন নোটিশ মডাল */}
       {selectedNotice && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedNotice(null)}>
           <div className="bg-gray-900 border border-gray-700 w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl flex flex-col" style={{ maxHeight: '85vh' }} onClick={(e) => e.stopPropagation()}>
