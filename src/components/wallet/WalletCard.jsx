@@ -1,11 +1,11 @@
 import React from 'react';
-import { Plus, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { Plus, ArrowDownLeft, ArrowUpRight, ArrowRightLeft } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
 import { formatBDT } from '../../utils/formatters';
 import Card from '../ui/Card';
 
-const WalletCard = ({ balance = 0, ordersCount = 0, totalSpent = 0, onRecharge }) => {
+const WalletCard = ({ balance = 0, ordersCount = 0, totalSpent = 0, onRecharge, onWithdraw }) => {
   const { t } = useLanguage();
   const { user } = useAuth();
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Player';
@@ -20,19 +20,28 @@ const WalletCard = ({ balance = 0, ordersCount = 0, totalSpent = 0, onRecharge }
             <h2 className="text-5xl font-black text-white tracking-tight">{balance.toFixed(2)}</h2>
             <span className="text-sm font-bold text-purple-400">BDT</span>
           </div>
-          <div className="flex items-center justify-between mt-8">
+          
+          <div className="flex items-center justify-between mt-6 mb-4">
             <div>
               <p className="text-sm font-bold text-white mb-1">{userName}</p>
               <p className="text-[10px] text-gray-400">ID: {user?.id?.slice(0, 8)}</p>
             </div>
-            <button onClick={onRecharge} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-bold rounded-xl hover:shadow-lg shadow-purple-500/30 transition active:scale-95">
+          </div>
+
+          {/* বাটন দুটি পাশাপাশি */}
+          <div className="grid grid-cols-2 gap-3 mt-2">
+            <button onClick={onRecharge} className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-bold rounded-xl hover:shadow-lg shadow-purple-500/30 transition active:scale-95">
               <img src="/icon-192.png" alt="Logo" className="w-5 h-5 rounded-md object-cover" />
-              <Plus className="w-4 h-4 -ml-1" />
-              {t('rechargeNow') || 'Recharge Now'}
+              {t('addMoney') || 'Add Money'}
+            </button>
+            <button onClick={onWithdraw} className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-white/10 text-white border border-white/20 text-sm font-bold rounded-xl hover:bg-white/20 transition active:scale-95">
+              <ArrowRightLeft className="w-4 h-4" />
+              {t('withdraw') || 'Withdraw'}
             </button>
           </div>
         </div>
       </Card>
+
       <div className="grid grid-cols-3 gap-3">
         <Card variant="gaming" padding="sm" className="flex flex-col items-center justify-center text-center py-4 bg-white dark:bg-gray-800/80 border-gray-100 dark:border-gray-700">
           <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-2"><ArrowDownLeft className="w-4 h-4 text-green-600 dark:text-green-400" /></div>
@@ -53,4 +62,5 @@ const WalletCard = ({ balance = 0, ordersCount = 0, totalSpent = 0, onRecharge }
     </div>
   );
 };
+
 export default WalletCard;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, X, Wallet, History } from 'lucide-react';
+import { ArrowLeft, X, History, Loader2, CheckCircle, ShieldAlert } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useWallet } from '../../hooks/useWallet';
 import { useOrders } from '../../hooks/useOrders';
@@ -17,43 +17,57 @@ const WalletPage = () => {
   const navigate = useNavigate();
   const { balance, transactions, addMoney, refresh, loading } = useWallet();
   const { orders } = useOrders();
-  const { notifySuccess, notifyError } = useNotifications();
+  const { notifyError } = useNotifications();
   
-  const [processing, setProcessing] = useState(false);
-  const [fullScreenAction, setFullScreenAction] = useState(null); // 'add' | 'withdraw' | null
+  const [fullScreenAction, setFullScreenAction] = useState(null); // 'add' | 'withdraw'
+  const [txStatus, setTxStatus] = useState('idle'); // 'idle' | 'processing' | 'success' | 'pending'
+  const [txError, setTxError] = useState('');
 
   const ordersCount = orders?.length || 0;
   const totalSpent = transactions.filter((tx) => tx.type === 'purchase' || Number(tx.amount) < 0).reduce((sum, tx) => sum + Math.abs(Number(tx.amount || 0)), 0);
 
   const handleAddMoney = async (data) => {
-    setProcessing(true);
+    setTxStatus('processing');
+    setTxError('');
+    
+    // ২ সেকেন্ডের ডেমো ডিলে (বাস্তব পেমেন্ট গেটওয়ের মতো দেখানোর জন্য)
+    await new Promise(r => setTimeout(r, 1500));
+    
     const result = await addMoney(data.amount, data.method);
-    setProcessing(false);
     if (result.success) { 
-      notifySuccess(t('moneyAdded') || 'Money added!'); 
-      setFullScreenAction(null); // সফল হলে স্ক্রিন বন্ধ হবে
+      setTxStatus('success');
+      await refresh();
+      setTimeout(() => { setFullScreenAction(null); setTxStatus('idle'); }, 2000);
     } else { 
+      setTxStatus('idle');
+      setTxError(result.error || 'Transaction failed'); 
       notifyError(result.error); 
     }
   };
 
   const handleWithdrawRequest = async (data) => {
-    setProcessing(true);
+    setTxStatus('processing');
+    setTxError('');
+    
+    await new Promise(r => setTimeout(r, 1500));
+
     const { error } = await supabase.from('transactions').insert({
       user_id: (await supabase.auth.getUser()).data.user.id,
       type: 'withdrawal',
       amount: -data.amount,
       method: data.method,
       reference: data.accountNumber,
-      status: 'pending',
+      status: 'pending', // Pending স্ট্যাটাস
       balance_after: balance - data.amount
     });
-    setProcessing(false);
+    
     if (!error) { 
-      notifySuccess(t('withdrawRequested') || 'Withdrawal request submitted for approval'); 
+      setTxStatus('pending');
       await refresh(); 
-      setFullScreenAction(null); // সফল হলে স্ক্রিন বন্ধ হবে
+      setTimeout(() => { setFullScreenAction(null); setTxStatus('idle'); }, 2500);
     } else { 
+      setTxStatus('idle');
+      setTxError(error.message); 
       notifyError(error.message); 
     }
   };
@@ -62,14 +76,12 @@ const WalletPage = () => {
     <div className="min-h-screen px-4 py-6 bg-[#f3f4f6] dark:bg-gray-900 relative">
       <div className="max-w-3xl mx-auto space-y-5">
         
-        {/* হেডার */}
-        <button onClick={() => navigate(ROUTES.USER_DASHBOARD)} className="text-slate-700 dark:text-white/80 hover:text-purple-600 dark:hover:text-white text-sm inline-flex items-center gap-2 font-medium">
+        <button onClick={() => navigate(ROUTES.USER_DASHBOARD)} className="text-slate-700 dark:text-white/80 hover:text-purple-600 dark:text-white text-sm inline-flex items-center gap-2 font-medium">
           <ArrowLeft className="w-4 h-4" /> {t('back') || 'Back'}
         </button>
         
         <h1 className="text-2xl font-black text-slate-800 dark:text-white mb-2">{t('myWallet') || 'Wallet'}</h1>
 
-        {/* ওয়ালেট কার্ড (এখানেই বাটনগুলো আছে) */}
         <WalletCard 
           balance={balance} 
           ordersCount={ordersCount} 
@@ -78,7 +90,6 @@ const WalletPage = () => {
           onWithdraw={() => setFullScreenAction('withdraw')}
         />
 
-        {/* ট্রানজেকশন লিস্ট */}
         <div className="gaming-card p-5 mt-6 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-4">
             <History className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -89,44 +100,80 @@ const WalletPage = () => {
 
       </div>
 
-      {/* 🌟 ফুল-স্ক্রিন অ্যাকশন ওভারলে (Add Money / Withdraw) */}
+      {/* 🌟 ফুল-স্ক্রিন ওভারলে */}
       {fullScreenAction && (
         <div className="fixed inset-0 z-[100] bg-[#f3f4f6] dark:bg-gray-900 overflow-y-auto flex flex-col animate-slide-up">
           
-          {/* টপ হেডার (ব্যাক বাটন) */}
           <div className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10 px-4 py-3 flex items-center justify-between">
             <button 
               onClick={() => setFullScreenAction(null)} 
-              className="flex items-center gap-1.5 text-slate-700 dark:text-white text-sm font-bold bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+              disabled={txStatus === 'processing'}
+              className="flex items-center gap-1.5 text-slate-700 dark:text-white text-sm font-bold bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-200 disabled:opacity-50"
             >
               <ArrowLeft className="w-4 h-4" /> Back
             </button>
             <h2 className="text-base font-bold text-gray-800 dark:text-white">
-              {fullScreenAction === 'add' ? (t('addMoney') || 'Add Money') : (t('withdraw') || 'Withdraw Money')}
+              {fullScreenAction === 'add' ? 'Add Money' : 'Withdraw'}
             </h2>
-            <div className="w-16"></div> {/* সেন্টার করার জন্য স্পেসার */}
+            <div className="w-16"></div>
           </div>
 
-          {/* মেইন কন্টেন্ট */}
-          <div className="flex-1 p-4 pb-24 max-w-md w-full mx-auto">
-            <div className="gaming-card p-5 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 mt-2">
-              {fullScreenAction === 'add' ? (
-                <AddMoney onAdd={handleAddMoney} loading={processing} />
-              ) : (
-                <WithdrawMoney balance={balance} onWithdrawRequest={handleWithdrawRequest} loading={processing} />
+          {/* স্ট্যাটাস ভিউ */}
+          {txStatus !== 'idle' ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+              {txStatus === 'processing' && (
+                <div className="flex flex-col items-center">
+                  <Loader2 className="w-16 h-16 text-purple-600 animate-spin mb-4" />
+                  <h2 className="text-xl font-bold text-gray-800 dark:text-white">Processing...</h2>
+                  <p className="text-sm text-gray-500 mt-2">Please wait while we process your transaction.</p>
+                </div>
+              )}
+              
+              {txStatus === 'success' && (
+                <div className="flex flex-col items-center animate-scale-in">
+                  <CheckCircle className="w-20 h-20 text-green-500 mb-4" />
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Transaction Successful!</h2>
+                  <p className="text-sm text-gray-500 mt-2">Your wallet balance has been updated.</p>
+                </div>
+              )}
+
+              {txStatus === 'pending' && (
+                <div className="flex flex-col items-center animate-scale-in">
+                  <ShieldAlert className="w-20 h-20 text-yellow-500 mb-4" />
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Request Pending</h2>
+                  <p className="text-sm text-gray-500 mt-2">Your withdrawal request is pending admin approval.</p>
+                </div>
               )}
             </div>
-          </div>
+          ) : (
+            /* ইনপুট ফর্ম */
+            <div className="flex-1 p-4 pb-24 max-w-md w-full mx-auto">
+              {txError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">
+                  {txError}
+                </div>
+              )}
+              <div className="gaming-card p-5 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 mt-2">
+                {fullScreenAction === 'add' ? (
+                  <AddMoney onAdd={handleAddMoney} loading={false} />
+                ) : (
+                  <WithdrawMoney balance={balance} onWithdrawRequest={handleWithdrawRequest} loading={false} />
+                )}
+              </div>
+            </div>
+          )}
 
-          {/* বটম ফিক্সড ক্লোজ বাটন */}
-          <div className="fixed bottom-0 inset-x-0 p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-            <button 
-              onClick={() => setFullScreenAction(null)} 
-              className="w-full py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition flex items-center justify-center gap-2"
-            >
-              <X className="w-5 h-5" /> Close
-            </button>
-          </div>
+          {/* ক্লোজ বাটন (প্রসেসিং এর সময় লুকানো থাকবে) */}
+          {txStatus === 'idle' && (
+            <div className="fixed bottom-0 inset-x-0 p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+              <button 
+                onClick={() => setFullScreenAction(null)} 
+                className="w-full py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition flex items-center justify-center gap-2"
+              >
+                <X className="w-5 h-5" /> Close
+              </button>
+            </div>
+          )}
 
         </div>
       )}
