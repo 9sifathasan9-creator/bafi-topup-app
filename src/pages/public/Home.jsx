@@ -11,7 +11,6 @@ const Home = () => {
   const { t } = useLanguage();
   const { filteredGames, loading } = useGames();
   const [notices, setNotices] = useState([]);
-  const [noticeError, setNoticeError] = useState(null);
   const [selectedNotice, setSelectedNotice] = useState(null);
   const [currentNotice, setCurrentNotice] = useState(0);
   const [isInteracting, setIsInteracting] = useState(false);
@@ -21,12 +20,8 @@ const Home = () => {
 
   const fetchNotices = async () => {
     const { data, error } = await supabase.from('notices').select('*').order('created_at', { ascending: false }).limit(5);
-    if (error) {
-      console.error('Notice Fetch Error:', error);
-      setNoticeError(error.message);
-    } else {
-      setNotices(data || []);
-      setNoticeError(null);
+    if (!error && data) {
+      setNotices(data);
     }
   };
 
@@ -74,11 +69,6 @@ const Home = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* 🔍 ডিবাগ বক্স */}
-      <div style={{backgroundColor: "#ef4444", color: "white", padding: "4px", fontSize: "10px", textAlign: "center", zIndex: 9999}}>
-        <strong>Notice Debug:</strong> Count = {notices.length} | Error = {noticeError ? noticeError : "None"}
-      </div>
-
       <section className="px-3 pt-4 pb-2 flex-1">
         <div className="max-w-5xl mx-auto flex flex-col items-center justify-center text-center">
           
