@@ -50,16 +50,19 @@ const AdminNotices = () => {
     setSaving(true);
     try {
       if (editing) {
-        await updateNotice(editing.id, form);
+        const res = await updateNotice(editing.id, form);
+        if (!res) throw new Error('Update failed. Check RLS permissions.');
         notifySuccess(t('noticeUpdatedMsg') || 'Notice updated!');
       } else {
-        await addNotice(form);
+        const res = await addNotice(form);
+        if (!res) throw new Error('Insert failed. Check RLS permissions.');
         notifySuccess(t('noticeAdded') || 'Notice added!');
       }
       setModalOpen(false);
       fetchNotices();
     } catch (err) {
-      notifyError(t('saveFailed') || 'Save failed');
+      console.error('Save Notice Error:', err);
+      notifyError(err.message || 'Failed to save notice');
     } finally {
       setSaving(false);
     }
@@ -72,7 +75,7 @@ const AdminNotices = () => {
       notifySuccess(t('noticeDeleted') || 'Notice deleted');
       fetchNotices();
     } else {
-      notifyError(t('deleteFailed') || 'Delete failed');
+      notifyError(t('deleteFailed') || 'Delete failed. Check RLS permissions.');
     }
   };
 
