@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Gamepad2, ShoppingCart, CreditCard, Bell, Settings, Send } from 'lucide-react';
+import { Users, Gamepad2, ShoppingCart, CreditCard, Bell, Settings, Send, Wallet } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../supabaseClient';
@@ -40,12 +40,6 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchStats();
-    const channel = supabase.channel('admin-dashboard-stats')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, fetchStats)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, fetchStats)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchStats)
-      .subscribe();
-    return () => supabase.removeChannel(channel);
   }, []);
 
   const chartData = [
@@ -56,9 +50,10 @@ const AdminDashboard = () => {
   const menuItems = [
     { id: 'games', label: t('manageGames') || 'Manage Games', icon: Gamepad2, color: 'text-purple-500', path: ROUTES.ADMIN_GAMES },
     { id: 'orders', label: t('manageOrders') || 'Manage Orders', icon: ShoppingCart, color: 'text-green-500', path: ROUTES.ADMIN_ORDERS },
+    { id: 'deposits', label: 'Deposit Requests', icon: Wallet, color: 'text-teal-500', path: '/admin/deposits' }, // নতুন বাটন
+    { id: 'withdrawals', label: 'Withdrawals', icon: Send, color: 'text-orange-500', path: '/admin/withdrawals' },
     { id: 'users', label: t('manageUsers') || 'Manage Users', icon: Users, color: 'text-blue-500', path: ROUTES.ADMIN_USERS },
     { id: 'notices', label: t('manageNotices') || 'Manage Notices', icon: Bell, color: 'text-pink-500', path: ROUTES.ADMIN_NOTICES },
-    { id: 'withdrawals', label: 'Withdrawals', icon: Send, color: 'text-orange-500', path: '/admin/withdrawals' }, // নতুন বাটন
     { id: 'settings', label: t('settings') || 'Settings', icon: Settings, color: 'text-yellow-500', path: ROUTES.ADMIN_SETTINGS },
   ];
 
@@ -86,7 +81,7 @@ const AdminDashboard = () => {
         <RevenueChart data={chartData} />
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-6">
         {menuItems.map((item) => {
           const Icon = item.icon;
           return (
