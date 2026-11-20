@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Send, CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Send } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useNotifications } from '../../hooks/useNotifications';
 import { supabase } from '../../supabaseClient';
@@ -16,10 +16,13 @@ const AdminWithdrawals = () => {
 
   const fetchRequests = async () => {
     setLoading(true);
-    const { data } = await supabase.from('transactions')
+    const { data, error } = await supabase.from('transactions')
       .select(`*, profiles(email, full_name)`)
-      .eq('type', 'withdrawal').eq('status', 'pending')
+      .eq('type', 'withdrawal')
+      .eq('status', 'pending')
       .order('created_at', { ascending: false });
+
+    if (error) console.error(error);
     setRequests(data || []);
     setLoading(false);
   };
@@ -34,11 +37,16 @@ const AdminWithdrawals = () => {
       // ২. ইউজারের ওয়ালেট থেকে টাকা কাটা
       const { data: wallet } = await supabase.from('wallets').select('balance').eq('user_id', tx.user_id).single();
       if (wallet) {
-        await supabase.from('wallets').update({ balance: wallet.balance - Math.abs(tx.amount) }).eq('user_id', tx.user_id);
+        const newBalance = Number(wallet.balance) - Math.abs(Number(tx.amount));
+        await supabase.from('wallets').update({ balance: newBalance }).eq('user_id', tx.user_id);
       }
-      notifySuccess('Withdrawal Approved & Balance Deducted');
+      
+      notifySuccess('Withdrawal Approved & Balance Deducted!');
       fetchRequests();
-    } catch (err) { notifyError('Failed to approve'); }
+    } catch (err) { 
+      console.error(err);
+      notifyError('Approval Failed'); 
+    }
   };
 
   const handleReject = async (id) => {
@@ -50,27 +58,38 @@ const AdminWithdrawals = () => {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2"><Send className="w-6 h-6" /> Withdrawal Requests</h1>
+        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <Send className="w-6 h-6" /> Withdrawal Requests
+        </h1>
         <p className="text-white/70 text-sm">{requests.length} pending requests</p>
       </div>
 
-      {loading ? <div className="text-white text-center">Loading...</div> : requests.length === 0 ? (
-        <Card variant="gaming" padding="lg" className="text-center text-gray-400">No pending withdrawals.</Card>
+      {loading ? (
+        <div className="text-white text-center py-10">Loading...</div>
+      ) : requests.length === 0 ? (
+        <Card variant="gaming" padding="lg" className="text-center text-gray-400">
+          No pending withdrawals.
+        </Card>
       ) : (
         <div className="grid gap-3">
           {requests.map(tx => (
-            <Card key={tx.id} variant="gaming" padding="md" className="flex flex-col sm:flex-row justify-between gap-4">
-              <div>
+            <Card key={tx.id} variant="gaming" padding="md" className="flex flex-col md:flex-row justify-between gap-4">
+              <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <p className="font-bold text-white">{tx.profiles?.email || 'User'}</p>
                   <Badge variant="warning" size="sm">Pending</Badge>
                 </div>
                 <p className="text-xs text-gray-400 mb-2">{formatDateTime(tx.created_at)}</p>
-                <p className="text-sm text-gray-300">Method: <strong className="text-white uppercase">{tx.method}</strong> | Acc: <strong className="text-white">{tx.reference}</strong></p>
+                
+                <div className="bg-black/20 p-3 rounded-lg text-sm space-y-1 mb-3">
+                  <p className="text-gray-300">Method: <strong className="text-white uppercase">{tx.method}</strong></p>
+                  <p className="text-gray-300">Account: <strong className="text-white font-mono">{tx.reference}</strong></p>
+                  <p className="text-gray-300">Amount: <strong className="text-red-400 font-bold">{formatBDT(Math.abs(tx.amount))}</strong></p>
+                </div>
               </div>
-              <div className="flex flex-col sm:items-end justify-between">
-                <p className="text-xl font-bold text-purple-400 mb-2">{formatBDT(Math.abs(tx.amount))}</p>
-                <div className="flex gap-2">
+              
+              <div className="flex flex-col items-end justify-between">
+                <div className="flex gap-2 mt-3 md:mt-0">
                   <Button variant="success" size="sm" leftIcon={CheckCircle} onClick={() => handleApprove(tx)}>Approve</Button>
                   <Button variant="danger" size="sm" leftIcon={XCircle} onClick={() => handleReject(tx.id)}>Reject</Button>
                 </div>
@@ -82,4 +101,5 @@ const AdminWithdrawals = () => {
     </div>
   );
 };
+
 export default AdminWithdrawals;
