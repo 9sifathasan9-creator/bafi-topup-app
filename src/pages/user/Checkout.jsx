@@ -11,6 +11,7 @@ import { ROUTES } from '../../utils/constants';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import VerifyPinModal from '../../components/common/VerifyPinModal';
+import StepIndicator from '../../components/common/StepIndicator';
 
 const Checkout = () => {
   const { t } = useLanguage();
@@ -55,10 +56,19 @@ const Checkout = () => {
   };
 
   return (
-    <div className="min-h-screen px-4 py-6">
+    <div className="min-h-screen px-4 py-6 bg-[#f3f4f6] dark:bg-gray-900">
       <div className="max-w-5xl mx-auto">
-        <button onClick={() => navigate(-1)} className="text-slate-700 dark:text-white/80 text-sm inline-flex items-center gap-2 mb-5"><ArrowLeft className="w-4 h-4" /> Back</button>
+        
+        {/* হেডার: Back বাটন এবং Step Indicator (ধাপ ৩) */}
+        <div className="flex items-center justify-between mb-5">
+          <button onClick={() => navigate(-1)} className="text-slate-700 dark:text-white/80 text-sm inline-flex items-center gap-2 font-medium">
+            <ArrowLeft className="w-4 h-4" /> Back
+          </button>
+          <StepIndicator currentStep={3} />
+        </div>
+
         <h1 className="text-2xl font-black text-slate-800 dark:text-white mb-5">Checkout</h1>
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div className="lg:col-span-2 space-y-5">
             <Card variant="gaming" padding="md">
@@ -81,7 +91,9 @@ const Checkout = () => {
           </div>
           <div className="lg:col-span-1">
             <Card variant="gaming" padding="md">
-              <div className="flex justify-between pt-3 border-t border-gray-200 dark:border-gray-700 mb-4"><span className="font-bold">Total</span><span className="text-xl font-bold text-purple-600">{formatBDT(total)}</span></div>
+              <div className="flex justify-between pt-3 border-t border-gray-200 dark:border-gray-700 mb-4">
+                <span className="font-bold">Total</span><span className="text-xl font-bold text-purple-600">{formatBDT(total)}</span>
+              </div>
               <Button variant="primary" size="lg" onClick={handlePlaceOrder} loading={processing} disabled={balance < total} fullWidth>Place Order</Button>
             </Card>
           </div>
