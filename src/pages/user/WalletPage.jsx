@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, X, History, Loader2, CheckCircle, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, X, History, Loader2, ShieldAlert } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useWallet } from '../../hooks/useWallet';
 import { useOrders } from '../../hooks/useOrders';
@@ -20,18 +20,16 @@ const WalletPage = () => {
   const { notifyError } = useNotifications();
   
   const [fullScreenAction, setFullScreenAction] = useState(null); 
-  const [txStatus, setTxStatus] = useState('idle'); // 'idle' | 'processing' | 'pending'
+  const [txStatus, setTxStatus] = useState('idle'); 
   const [txError, setTxError] = useState('');
 
   const ordersCount = orders?.length || 0;
   const totalSpent = transactions.filter((tx) => tx.type === 'purchase' || Number(tx.amount) < 0).reduce((sum, tx) => sum + Math.abs(Number(tx.amount || 0)), 0);
 
-  // ➕ Add Money (Pending Request)
   const handleAddMoney = async (data) => {
     setTxStatus('processing');
     setTxError('');
     
-    // রিকোয়েস্ট তৈরি করা (ব্যালেন্স আপডেট হবে না)
     const { error } = await supabase.from('transactions').insert({
       user_id: (await supabase.auth.getUser()).data.user.id,
       type: 'deposit',
@@ -39,12 +37,12 @@ const WalletPage = () => {
       method: data.method,
       reference: data.trxId,
       sender_number: data.senderNumber,
-      status: 'pending', // Pending স্ট্যাটাস
-      balance_after: balance // ব্যালেন্স অপরিবর্তিত
+      status: 'pending',
+      balance_after: balance
     });
 
     if (!error) {
-      setTxStatus('pending'); // Pending স্ক্রিন দেখাবে
+      setTxStatus('pending');
       await refresh();
     } else {
       setTxStatus('idle');
@@ -53,7 +51,6 @@ const WalletPage = () => {
     }
   };
 
-  // ➖ Withdraw Request
   const handleWithdrawRequest = async (data) => {
     setTxStatus('processing');
     setTxError('');
@@ -81,7 +78,6 @@ const WalletPage = () => {
   return (
     <div className="min-h-screen px-4 py-6 bg-[#f3f4f6] dark:bg-gray-900 relative">
       <div className="max-w-3xl mx-auto space-y-5">
-        
         <button onClick={() => navigate(ROUTES.USER_DASHBOARD)} className="text-slate-700 dark:text-white/80 hover:text-purple-600 text-sm inline-flex items-center gap-2 font-medium">
           <ArrowLeft className="w-4 h-4" /> {t('back') || 'Back'}
         </button>
@@ -103,24 +99,15 @@ const WalletPage = () => {
           </div>
           <TransactionList transactions={transactions} loading={loading} />
         </div>
-
       </div>
 
-      {/* ফুল-স্ক্রিন ওভারলে */}
       {fullScreenAction && (
         <div className="fixed inset-0 z-[100] bg-[#f3f4f6] dark:bg-gray-900 overflow-y-auto flex flex-col animate-slide-up">
-          
           <div className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10 px-4 py-3 flex items-center justify-between">
-            <button 
-              onClick={() => setFullScreenAction(null)} 
-              disabled={txStatus === 'processing'}
-              className="flex items-center gap-1.5 text-slate-700 dark:text-white text-sm font-bold bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-200 disabled:opacity-50"
-            >
+            <button onClick={() => setFullScreenAction(null)} disabled={txStatus === 'processing'} className="flex items-center gap-1.5 text-slate-700 dark:text-white text-sm font-bold bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-200 disabled:opacity-50">
               <ArrowLeft className="w-4 h-4" /> Back
             </button>
-            <h2 className="text-base font-bold text-gray-800 dark:text-white">
-              {fullScreenAction === 'add' ? 'Add Money' : 'Withdraw'}
-            </h2>
+            <h2 className="text-base font-bold text-gray-800 dark:text-white">{fullScreenAction === 'add' ? 'Add Money' : 'Withdraw'}</h2>
             <div className="w-16"></div>
           </div>
 
@@ -133,7 +120,6 @@ const WalletPage = () => {
                   <p className="text-sm text-gray-500 mt-2">Submitting your request.</p>
                 </div>
               )}
-              
               {txStatus === 'pending' && (
                 <div className="flex flex-col items-center animate-scale-in">
                   <ShieldAlert className="w-20 h-20 text-yellow-500 mb-4" />
@@ -145,11 +131,7 @@ const WalletPage = () => {
             </div>
           ) : (
             <div className="flex-1 p-4 pb-24 max-w-md w-full mx-auto">
-              {txError && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">
-                  {txError}
-                </div>
-              )}
+              {txError && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">{txError}</div>}
               <div className="gaming-card p-5 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 mt-2">
                 {fullScreenAction === 'add' ? (
                   <AddMoney onSubmitRequest={handleAddMoney} loading={false} />
@@ -162,15 +144,11 @@ const WalletPage = () => {
 
           {txStatus === 'idle' && (
             <div className="fixed bottom-0 inset-x-0 p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-              <button 
-                onClick={() => setFullScreenAction(null)} 
-                className="w-full py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition flex items-center justify-center gap-2"
-              >
+              <button onClick={() => setFullScreenAction(null)} className="w-full py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition flex items-center justify-center gap-2">
                 <X className="w-5 h-5" /> Close
               </button>
             </div>
           )}
-
         </div>
       )}
     </div>

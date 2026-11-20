@@ -17,7 +17,6 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminSidebar from './components/admin/AdminSidebar';
 import AdminHeader from './components/admin/AdminHeader';
 
-// Public
 import Home from './pages/public/Home';
 import About from './pages/public/About';
 import Contact from './pages/public/Contact';
@@ -29,20 +28,17 @@ import Blog from './pages/public/Blog';
 import BlogPost from './pages/public/BlogPost';
 import NotFound from './pages/public/NotFound';
 
-// Auth
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import VerifyEmailPage from './pages/auth/VerifyEmailPage';
 
-// Games
 import GamesPage from './pages/games/GamesPage';
 import GameDetailsPage from './pages/games/GameDetailsPage';
 import CategoryPage from './pages/games/CategoryPage';
 import SearchPage from './pages/games/SearchPage';
 
-// User
 import UserDashboard from './pages/user/UserDashboard';
 import UserProfile from './pages/user/UserProfile';
 import WalletPage from './pages/user/WalletPage';
@@ -56,7 +52,6 @@ import CouponsPage from './pages/user/CouponsPage';
 import SupportPage from './pages/user/SupportPage';
 import Settings from './pages/user/Settings';
 
-// Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminGames from './pages/admin/AdminGames';
@@ -65,6 +60,7 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminTransactions from './pages/admin/AdminTransactions';
 import AdminWithdrawals from './pages/admin/AdminWithdrawals';
+import AdminDeposits from './pages/admin/AdminDeposits';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminCoupons from './pages/admin/AdminCoupons';
@@ -81,9 +77,7 @@ const AdminLayout = ({ children, title }) => {
       <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0">
         <AdminHeader onMenuClick={() => setSidebarOpen(true)} title={title} />
-        <main className="flex-1 p-4 md:p-6 bg-gradient-to-br from-purple-600 via-blue-500 to-indigo-600">
-          {children}
-        </main>
+        <main className="flex-1 p-4 md:p-6 bg-gradient-to-br from-purple-600 via-blue-500 to-indigo-600">{children}</main>
       </div>
     </div>
   );
@@ -101,7 +95,6 @@ function App() {
                   <NotificationToast position="top-right" />
                   <PWAInstall />
                   <Routes>
-                    {/* Admin Routes */}
                     <Route path="/admin/login" element={<AdminLogin />} />
                     <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout title="Dashboard"><AdminDashboard /></AdminLayout></ProtectedRoute>} />
                     <Route path="/admin/analytics" element={<ProtectedRoute requireAdmin><AdminLayout title="Analytics"><AdminAnalytics /></AdminLayout></ProtectedRoute>} />
@@ -120,7 +113,6 @@ function App() {
                     <Route path="/admin/backup" element={<ProtectedRoute requireAdmin><AdminLayout title="Backup"><AdminBackup /></AdminLayout></ProtectedRoute>} />
                     <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><AdminLayout title="Settings"><AdminSettings /></AdminLayout></ProtectedRoute>} />
 
-                    {/* Public Routes */}
                     <Route path="/*" element={
                       <div className="min-h-screen flex flex-col">
                         <Navbar />
@@ -135,18 +127,15 @@ function App() {
                             <Route path="/refund" element={<Refund />} />
                             <Route path="/blog" element={<Blog />} />
                             <Route path="/blog/:id" element={<BlogPost />} />
-
                             <Route path="/login" element={<LoginPage />} />
                             <Route path="/register" element={<RegisterPage />} />
                             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                             <Route path="/reset-password" element={<ResetPasswordPage />} />
                             <Route path="/verify-email" element={<VerifyEmailPage />} />
-
                             <Route path="/games" element={<GamesPage />} />
                             <Route path="/games/:id" element={<GameDetailsPage />} />
                             <Route path="/category/:slug" element={<CategoryPage />} />
                             <Route path="/search" element={<SearchPage />} />
-
                             <Route path="/user" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
                             <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
                             <Route path="/wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
@@ -159,7 +148,6 @@ function App() {
                             <Route path="/coupons" element={<ProtectedRoute><CouponsPage /></ProtectedRoute>} />
                             <Route path="/support" element={<ProtectedRoute><SupportPage /></ProtectedRoute>} />
                             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-
                             <Route path="*" element={<NotFound />} />
                           </Routes>
                         </div>
@@ -178,5 +166,4 @@ function App() {
     </ErrorBoundary>
   );
 }
-
 export default App;

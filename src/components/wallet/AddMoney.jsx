@@ -7,11 +7,10 @@ import Input from '../ui/Input';
 import Button from '../ui/Button';
 import PaymentMethods from '../payment/PaymentMethods';
 
-// ⚠️ এখানে আপনার আসল বিকাশ/নগদ/রকেট নাম্বার বসাবেন
 const ADMIN_PAYMENT_NUMBERS = {
-  bkash: '017XXXXXXXX', // আপনার বিকাশ পার্সোনাল নাম্বার
-  nagad: '017XXXXXXXX', // আপনার নগদ নাম্বার
-  rocket: '017XXXXXXXX1', // আপনার রকেট নাম্বার
+  bkash: '017XXXXXXXX', 
+  nagad: '017XXXXXXXX', 
+  rocket: '017XXXXXXXX1', 
 };
 
 const AddMoney = ({ onSubmitRequest, loading = false }) => {
@@ -39,11 +38,8 @@ const AddMoney = ({ onSubmitRequest, loading = false }) => {
       </div>
 
       <Input type="number" label="Amount (BDT)" leftIcon={DollarSign} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="e.g. 500" required min={MONEY.MIN_DEPOSIT} />
-      
       <PaymentMethods selected={method} onSelect={setMethod} />
-      
       <Input label="Sender Number" leftIcon={Phone} value={senderNumber} onChange={(e) => setSenderNumber(e.target.value)} placeholder="01XXXXXXXXX" required />
-      
       <Input label="Transaction ID (TrxID)" leftIcon={Hash} value={trxId} onChange={(e) => setTrxId(e.target.value.toUpperCase())} placeholder="e.g. 8N7A2B3C4D" required />
 
       <Button type="submit" variant="primary" leftIcon={Send} loading={loading} fullWidth>Submit Request</Button>
