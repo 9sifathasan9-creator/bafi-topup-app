@@ -1,90 +1,45 @@
 import React from 'react';
-import { Loader2, Search, Package } from 'lucide-react';
+import { Loader2, Package } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import GameCard from './GameCard';
 
-// ============================================
-// 🎮 Game Grid Component
-// ============================================
-// গেমের গ্রিড লেআউট + Loading + Empty State
-
-const GameGrid = ({
-  games = [],
-  loading = false,
-  favorites = [],
-  onToggleFavorite,
-  emptyMessage,
-  columns = 'auto',      // auto | 2 | 3 | 4
-  gap = 'md',            // sm | md | lg
-}) => {
+const GameGrid = ({ games = [], loading = false, favorites = [], onToggleFavorite, emptyMessage, columns = 'auto', gap = 'md' }) => {
   const { t } = useLanguage();
 
-  // ============================================
-  // 📏 Grid Columns
-  // ============================================
+  // মোবাইলে ২ কলাম, ডেস্কটপে ৩ বা ৪ কলাম
   const columnClasses = {
-    auto: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
-    '2': 'grid-cols-1 sm:grid-cols-2',
-    '3': 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
-    '4': 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
+    auto: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
+    '2': 'grid-cols-2',
+    '3': 'grid-cols-2 md:grid-cols-3',
+    '4': 'grid-cols-2 md:grid-cols-4',
   };
+  const gapClasses = { sm: 'gap-2', md: 'gap-3', lg: 'gap-4' };
 
-  const gapClasses = {
-    sm: 'gap-3',
-    md: 'gap-4',
-    lg: 'gap-6',
-  };
-
-  // ============================================
-  // ⏳ Loading State
-  // ============================================
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-3">
-        <Loader2 className="w-10 h-10 text-white animate-spin" />
-        <p className="text-white/70 text-sm">
-          {t('loading') || 'Loading games...'}
-        </p>
+      <div className="flex flex-col items-center justify-center py-16 gap-3">
+        <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+        <p className="text-gray-500 text-sm">{t('loading') || 'Loading games...'}</p>
       </div>
     );
   }
 
-  // ============================================
-  // 📭 Empty State
-  // ============================================
   if (!games || games.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-        <div className="w-20 h-20 bg-white/10 backdrop-blur-lg rounded-full flex items-center justify-center mb-4">
-          <Package className="w-10 h-10 text-white/60" />
+      <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+        <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-3">
+          <Package className="w-8 h-8 text-gray-400" />
         </div>
-        <h3 className="text-xl font-bold text-white mb-2">
-          {emptyMessage || t('noGames') || 'No games found'}
-        </h3>
-        <p className="text-white/60 text-sm max-w-md">
-          {t('noGamesDesc') || 'Try changing your filters or search query'}
-        </p>
+        <h3 className="text-sm font-bold text-gray-800 dark:text-white mb-1">{emptyMessage || t('noGames') || 'No games available'}</h3>
+        <p className="text-gray-500 text-xs max-w-xs">{t('noGamesDesc') || 'Try changing your filters or check back later'}</p>
       </div>
     );
   }
 
-  // ============================================
-  // 🎮 Games Grid
-  // ============================================
   return (
-    <div
-      className={`
-        grid ${columnClasses[columns] || columnClasses.auto}
-        ${gapClasses[gap] || gapClasses.md}
-      `.trim()}
-    >
+    <div className={`grid ${columnClasses[columns] || columnClasses.auto} ${gapClasses[gap] || gapClasses.md}`}>
       {games.map((game) => (
-        <GameCard
-          key={game.id}
-          game={game}
-          isFavorite={favorites.includes(game.id)}
-          onToggleFavorite={onToggleFavorite}
-        />
+        <GameCard key={game.id} game={game} isFavorite={favorites.includes(game.id)} onToggleFavorite={onToggleFavorite} />
       ))}
     </div>
   );
