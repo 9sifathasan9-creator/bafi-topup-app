@@ -111,6 +111,7 @@ function App() {
                     <Route path="/admin/orders" element={<ProtectedRoute requireAdmin><AdminLayout title="Orders"><AdminOrders /></AdminLayout></ProtectedRoute>} />
                     <Route path="/admin/transactions" element={<ProtectedRoute requireAdmin><AdminLayout title="Transactions"><AdminTransactions /></AdminLayout></ProtectedRoute>} />
                     <Route path="/admin/withdrawals" element={<ProtectedRoute requireAdmin><AdminLayout title="Withdrawals"><AdminWithdrawals /></AdminLayout></ProtectedRoute>} />
+                    <Route path="/admin/deposits" element={<ProtectedRoute requireAdmin><AdminLayout title="Deposits"><AdminDeposits /></AdminLayout></ProtectedRoute>} />
                     <Route path="/admin/coupons" element={<ProtectedRoute requireAdmin><AdminLayout title="Coupons"><AdminCoupons /></AdminLayout></ProtectedRoute>} />
                     <Route path="/admin/reviews" element={<ProtectedRoute requireAdmin><AdminLayout title="Reviews"><AdminReviews /></AdminLayout></ProtectedRoute>} />
                     <Route path="/admin/tickets" element={<ProtectedRoute requireAdmin><AdminLayout title="Tickets"><AdminTickets /></AdminLayout></ProtectedRoute>} />
