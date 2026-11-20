@@ -15,6 +15,7 @@ const PaymentMethods = ({ selected, onSelect }) => {
         {PAYMENT_METHODS.filter((m) => m.enabled).map((method) => (
           <button
             key={method.id}
+            type="button" /* 👈 এই লাইনটি যোগ করা হয়েছে যাতে ফর্ম সাবমিট না হয় */
             onClick={() => onSelect?.(method.id)}
             className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition ${
               selected === method.id
