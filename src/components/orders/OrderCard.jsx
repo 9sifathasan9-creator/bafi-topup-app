@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check, RotateCw, FileText } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Copy, Check, FileText } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { formatBDT, formatDateTime, formatOrderId } from '../../utils/formatters';
 import { doCopy } from '../../supabaseClient';
@@ -9,7 +8,6 @@ import ReceiptModal from './ReceiptModal';
 
 const OrderCard = ({ order }) => {
   const { t } = useLanguage();
-  const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
 
@@ -21,21 +19,12 @@ const OrderCard = ({ order }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleBuyAgain = () => {
-    if (order.game_id) {
-      navigate(`/games/${order.game_id}`);
-    } else {
-      navigate('/games');
-    }
-  };
-
   const title = order.notes || order.game_name || 'Top-up';
   const subtitle = order.game_name || 'Game Top-up';
 
   return (
     <>
       <div className="gaming-card p-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm mb-4">
-        {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800/30 flex items-center justify-center flex-shrink-0">
@@ -49,7 +38,6 @@ const OrderCard = ({ order }) => {
           <OrderStatus status={order.status} />
         </div>
 
-        {/* Details Grid */}
         <div className="grid grid-cols-2 gap-y-3 gap-x-4 mb-4">
           <div>
             <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">{t('orderId') || 'Order ID'}</p>
@@ -74,13 +62,9 @@ const OrderCard = ({ order }) => {
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
-          <button onClick={() => setShowReceipt(true)} className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-            <FileText className="w-3.5 h-3.5" /> Receipt
-          </button>
-          <button onClick={handleBuyAgain} className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg text-xs font-bold hover:bg-purple-200 dark:hover:bg-purple-900/50 transition">
-            <RotateCw className="w-3.5 h-3.5" /> Buy Again
+          <button onClick={() => setShowReceipt(true)} className="w-full flex items-center justify-center gap-1.5 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+            <FileText className="w-3.5 h-3.5" /> View Receipt
           </button>
         </div>
       </div>
