@@ -37,6 +37,7 @@ import VerifyEmailPage from './pages/auth/VerifyEmailPage';
 import GamesPage from './pages/games/GamesPage';
 import GameDetailsPage from './pages/games/GameDetailsPage';
 import CategoryPage from './pages/games/CategoryPage';
+import PackagePage from './pages/games/PackagePage';
 import SearchPage from './pages/games/SearchPage';
 
 import UserDashboard from './pages/user/UserDashboard';
@@ -135,6 +136,8 @@ function App() {
                             <Route path="/games" element={<GamesPage />} />
                             <Route path="/games/:id" element={<GameDetailsPage />} />
                             <Route path="/category/:slug" element={<CategoryPage />} />
+                            <Route path="/games/:id/categories" element={<CategoryPage />} />
+                            <Route path="/games/:id/category/:catId" element={<PackagePage />} />
                             <Route path="/search" element={<SearchPage />} />
                             <Route path="/user" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
                             <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />

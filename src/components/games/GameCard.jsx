@@ -21,7 +21,7 @@ const GameCard = ({ game, isFavorite = false, onToggleFavorite }) => {
   };
 
   return (
-    <Link to={`${ROUTES.GAMES}/${game.id}`} className="block group">
+    <Link to={`/games/${game.id}/categories`} className="block group">
       <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-white/10 shadow-lg bg-gray-900">
         
         {/* গেমের ছবি বা ব্যাকগ্রাউন্ড */}
