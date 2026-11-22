@@ -5,7 +5,6 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useWallet } from '../../hooks/useWallet';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useOrders } from '../../hooks/useOrders';
-import { supabase } from '../../supabaseClient';
 import { formatBDT } from '../../utils/formatters';
 import { ROUTES } from '../../utils/constants';
 import Card from '../../components/ui/Card';
@@ -25,7 +24,6 @@ const Checkout = () => {
   const [showPin, setShowPin] = useState(false);
   const [playerId, setPlayerId] = useState('');
 
-  // আগের পেজ থেকে ডাটা নেওয়া
   const { gameId, packageData } = location.state || {};
 
   useEffect(() => {
@@ -37,39 +35,39 @@ const Checkout = () => {
   const handlePlaceOrder = () => {
     if (!playerId.trim()) { notifyError('Please enter your Player ID'); return; }
     if (balance < packageData.price) { notifyError('Insufficient wallet balance'); return; }
-    setShowPin(true); // পিন মডাল ওপেন হবে
+    setShowPin(true);
   };
 
   const executeOrder = async () => {
     setShowPin(false);
     setProcessing(true);
     
-    // ২ সেকেন্ড প্রসেসিং ডিলে
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 1500));
 
     try {
-      // ১. অর্ডার তৈরি (Pending স্ট্যাটাসে)
       const orderResult = await createOrder({ 
         gameId, 
-        gameName: 'Game Topup', 
+        gameName: packageData.name, 
         playerId: playerId.trim(), 
         amount: packageData.price, 
         quantity: 1, 
         paymentMethod: 'wallet',
-        notes: packageData.name // প্যাকেজের নাম নোটে রাখা হলো
+        notes: packageData.name
       });
 
       if (orderResult.success) {
-        // ২. ওয়ালেট থেকে টাকা কাটা
-        await deductForPurchase(packageData.price, orderResult.order.id);
+        const deductResult = await deductForPurchase(packageData.price, orderResult.order.id);
+        if (!deductResult.success) throw new Error(deductResult.error);
+        
         await refreshWallet();
         notifySuccess('Order placed successfully! Pending admin approval.');
         navigate(ROUTES.ORDERS);
       } else {
-        throw new Error('Order creation failed');
+        throw new Error(orderResult.error || 'Order creation failed');
       }
     } catch (err) {
-      notifyError(err.message || 'Order failed');
+      console.error('Checkout Error:', err);
+      notifyError(err.message || 'Topup failed');
     } finally {
       setProcessing(false);
     }
@@ -89,22 +87,14 @@ const Checkout = () => {
 
         <h1 className="text-2xl font-black text-slate-800 dark:text-white mb-5">Payment</h1>
 
-        {/* UID ইনপুট (সবার উপরে) */}
         <Card variant="gaming" padding="md" className="mb-4">
           <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">Player ID / UID</label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input 
-              type="text" 
-              value={playerId} 
-              onChange={(e) => setPlayerId(e.target.value)} 
-              placeholder="Enter your game ID" 
-              className="w-full pl-9 pr-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-sm text-gray-800 dark:text-white" 
-            />
+            <input type="text" value={playerId} onChange={(e) => setPlayerId(e.target.value)} placeholder="Enter your game ID" className="w-full pl-9 pr-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-sm text-gray-800 dark:text-white" />
           </div>
         </Card>
 
-        {/* অর্ডার সামারি */}
         <Card variant="gaming" padding="md" className="mb-4">
           <h3 className="text-sm font-bold mb-3">Order Summary</h3>
           <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
@@ -117,7 +107,6 @@ const Checkout = () => {
           </div>
         </Card>
 
-        {/* পেমেন্ট মেথড */}
         <Card variant="gaming" padding="md" className="mb-6">
           <label className="flex items-center gap-3 cursor-pointer p-3 border border-purple-500/30 rounded-lg bg-purple-50 dark:bg-purple-900/20">
             <ShieldCheck className="w-5 h-5 text-purple-600" />
