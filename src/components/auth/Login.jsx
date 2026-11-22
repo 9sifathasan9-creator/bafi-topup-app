@@ -5,6 +5,7 @@ import { supabase } from '../../supabaseClient';
 import { useLanguage } from '../../context/LanguageContext';
 import { ROUTES } from '../../utils/constants';
 import { isValidName, isValidPhone, isValidPassword } from '../../utils/validators';
+import PinSetupModal from './PinSetupModal';
 
 const STRICT_EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -12,17 +13,21 @@ const Login = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  const [mode, setMode] = useState('login'); // 'login' or 'register'
+  const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
-  const [transactionPin, setTransactionPin] = useState(''); // নতুন পিন স্টেট
+  const [transactionPin, setTransactionPin] = useState('');
   
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState('');
   const [error, setError] = useState('');
+
+  // পিন সেটআপের জন্য নতুন স্টেট
+  const [needsPinSetup, setNeedsPinSetup] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -37,10 +42,7 @@ const Login = () => {
       if (!isValidName(fullName)) { setError('Please enter your full name'); return; }
       if (!isValidPhone(phone)) { setError('Please enter a valid phone number'); return; }
       if (!isValidPassword(password)) { setError('Password must be at least 6 characters'); return; }
-      if (transactionPin.length !== 4 || !/^\d+$/.test(transactionPin)) { 
-        setError('Transaction PIN must be exactly 4 digits'); 
-        return; 
-      }
+      if (transactionPin.length !== 4 || !/^\d+$/.test(transactionPin)) { setError('Transaction PIN must be exactly 4 digits'); return; }
     }
 
     setLoading(true);
@@ -50,19 +52,32 @@ const Login = () => {
         email: email.trim().toLowerCase(),
         password,
       });
-      setLoading(false);
 
       if (authError || !data.user) {
         setError(authError.message || 'Invalid credentials');
+        setLoading(false);
         return;
       }
 
-      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
-      if (data.user.email === adminEmail) {
-        navigate(ROUTES.ADMIN_DASHBOARD, { replace: true });
-      } else {
-        navigate(ROUTES.USER_DASHBOARD, { replace: true });
+      // সফল লগইনের পর চেক করা হচ্ছে ইউজারের পিন আছে কিনা
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('transaction_pin')
+        .eq('id', data.user.id)
+        .single();
+
+      setLoading(false);
+
+      if (!profileError && (!profile?.transaction_pin || profile.transaction_pin.trim() === '')) {
+        // পিন নেই, সুতরাং মডাল দেখাবো
+        setCurrentUser(data.user);
+        setNeedsPinSetup(true);
+        return;
       }
+
+      // পিন আছে, সরাসরি রিডাইরেক্ট
+      redirectUser(data.user);
+      
     } else {
       // Registration with PIN
       const { data, error: authError } = await supabase.auth.signUp({
@@ -72,7 +87,7 @@ const Login = () => {
           data: { 
             full_name: fullName.trim(), 
             phone: phone.trim(),
-            transaction_pin: transactionPin // পিন মেটাডাটায় পাঠানো হলো
+            transaction_pin: transactionPin 
           }
         }
       });
@@ -92,14 +107,21 @@ const Login = () => {
     }
   };
 
+  const redirectUser = (userObj) => {
+    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+    if (userObj.email === adminEmail) {
+      navigate(ROUTES.ADMIN_DASHBOARD, { replace: true });
+    } else {
+      navigate(ROUTES.USER_DASHBOARD, { replace: true });
+    }
+  };
+
   const handleSocialLogin = async (provider) => {
     setSocialLoading(provider);
     setError('');
     const { error } = await supabase.auth.signInWithOAuth({
       provider: provider,
-      options: {
-        redirectTo: `${window.location.origin}/user`
-      }
+      options: { redirectTo: `${window.location.origin}/user` }
     });
     if (error) {
       setError(error.message);
@@ -109,6 +131,19 @@ const Login = () => {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
+      
+      {/* পিন সেটআপ মডাল */}
+      {needsPinSetup && currentUser && (
+        <PinSetupModal 
+          isOpen={needsPinSetup} 
+          user={currentUser} 
+          onSuccess={() => {
+            setNeedsPinSetup(false);
+            redirectUser(currentUser);
+          }} 
+        />
+      )}
+
       <div className="gaming-card w-full max-w-md p-6 sm:p-8">
         
         <div className="text-center mb-6">
@@ -174,18 +209,8 @@ const Login = () => {
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">4-Digit Transaction PIN / ৪ ডিজিটের পিন</label>
                 <div className="relative">
                   <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input 
-                    type="password" 
-                    maxLength={4}
-                    value={transactionPin} 
-                    onChange={(e) => setTransactionPin(e.target.value.replace(/\D/g, ''))} 
-                    placeholder="••••" 
-                    className="w-full pl-9 pr-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-sm text-gray-800 dark:text-white tracking-widest" 
-                    required 
-                    disabled={loading} 
-                  />
+                  <input type="password" maxLength={4} value={transactionPin} onChange={(e) => setTransactionPin(e.target.value.replace(/\D/g, ''))} placeholder="••••" className="w-full pl-9 pr-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-sm text-gray-800 dark:text-white tracking-widest" required disabled={loading} />
                 </div>
-                {/* সতর্কবার্তা */}
                 <p className="text-[10px] text-orange-500 dark:text-orange-400 mt-1.5 leading-relaxed bg-orange-50 dark:bg-orange-900/20 p-2 rounded">
                   এটি আপনার বিকাশ, নগদ কিংবা অন্য কোন মোবাইল ব্যাংকিং এর পিন নয় এটি আপনার বাফি একাউন্টের পিন। টাকা ঢুকানো ব্যতীত অন্য সকল ট্রানজেকশনের পূর্বে আপনাকে এই পিন দিতে হবে। তাই এই পিনটি যত্ন সহকারে সংরক্ষণ করুন, ধন্যবাদ।
                   <br/><br/>
