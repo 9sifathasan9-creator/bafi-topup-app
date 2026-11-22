@@ -21,12 +21,19 @@ const OrderCard = ({ order }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Buy Again ক্লিক করলে সরাসরি চেকআউট পেজে (ধাপ ৪) নিয়ে যাবে
   const handleBuyAgain = () => {
-    if (order.game_id) {
-      navigate(`/games/${order.game_id}/categories`);
-    } else {
-      navigate('/games');
-    }
+    const packageData = {
+      name: order.notes || order.game_name,
+      price: order.amount,
+      amount: order.amount
+    };
+    navigate('/checkout', { 
+      state: { 
+        gameId: order.game_id, 
+        packageData: packageData 
+      } 
+    });
   };
 
   const title = order.notes || order.game_name || 'Top-up';

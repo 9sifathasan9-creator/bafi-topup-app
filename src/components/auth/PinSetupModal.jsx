@@ -31,10 +31,7 @@ const PinSetupModal = ({ isOpen, user, onSuccess }) => {
         .update({ transaction_pin: pin })
         .eq('id', user.id);
 
-      if (updateError) {
-        // আসল এরর মেসেজটি দেখানো হচ্ছে
-        throw new Error(updateError.message);
-      }
+      if (updateError) throw new Error(updateError.message);
 
       notifySuccess('Transaction PIN set successfully!');
       onSuccess();
@@ -61,9 +58,9 @@ const PinSetupModal = ({ isOpen, user, onSuccess }) => {
 
         <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg border border-orange-200 dark:border-orange-800">
           <p className="text-[10px] text-orange-700 dark:text-orange-300 leading-relaxed">
-            এটি আপনার বিকাশ, নগদ কিংবা অন্য কোন মোবাইল ব্যাংকিং এর পিন নয় এটি আপনার বাফি একাউন্টের পিন। টাকা ঢুকানো ব্যতীত অন্য সকল ট্রানজেকশনের পূর্বে আপনাকে এই পিন দিতে হবে। তাই এই পিনটি যত্ন সহকারে সংরক্ষণ করুন, ধন্যবাদ।
+            এটি আপনার বিকাশ, নগদ কিংবা অন্য কোন মোবাইল ব্যাংকিং এর পিন নয় এটি আপনার বাফি একাউন্টের পিন। ক্যাশ ইন ব্যতীত অন্য সকল ট্রানজেকশনের পূর্বে আপনাকে এই পিন দিতে হবে। তাই এই পিনটি যত্ন সহকারে সংরক্ষণ করুন, ধন্যবাদ।
             <br/><br/>
-            This is NOT your bKash, Nagad, or any mobile banking PIN. It is your BAFI account PIN. You must enter this PIN before all transactions EXCEPT adding money. Keep it safe, thank you.
+            This is NOT your bKash, Nagad, or any mobile banking PIN. It is your BAFI account PIN. You must enter this PIN before all transactions EXCEPT cash in. Keep it safe, thank you.
           </p>
         </div>
 
@@ -75,31 +72,15 @@ const PinSetupModal = ({ isOpen, user, onSuccess }) => {
 
         <div>
           <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Enter 4-Digit PIN</label>
-          <input 
-            type="password" 
-            maxLength={4} 
-            value={pin} 
-            onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} 
-            className="w-full text-center text-2xl tracking-[0.5em] font-bold py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-purple-500 outline-none" 
-            placeholder="••••" 
-          />
+          <input type="password" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} className="w-full text-center text-2xl tracking-[0.5em] font-bold py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-purple-500 outline-none" placeholder="••••" />
         </div>
 
         <div>
           <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">Confirm 4-Digit PIN</label>
-          <input 
-            type="password" 
-            maxLength={4} 
-            value={confirmPin} 
-            onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))} 
-            className="w-full text-center text-2xl tracking-[0.5em] font-bold py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-purple-500 outline-none" 
-            placeholder="••••" 
-          />
+          <input type="password" maxLength={4} value={confirmPin} onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))} className="w-full text-center text-2xl tracking-[0.5em] font-bold py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-purple-500 outline-none" placeholder="••••" />
         </div>
 
-        <Button onClick={handleSave} loading={loading} fullWidth variant="primary">
-          Save PIN & Continue
-        </Button>
+        <Button onClick={handleSave} loading={loading} fullWidth variant="primary">Save PIN & Continue</Button>
       </div>
     </Modal>
   );
