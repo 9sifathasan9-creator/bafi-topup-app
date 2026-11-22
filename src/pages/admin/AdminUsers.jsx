@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Users, DollarSign } from 'lucide-react';
+import { Users, DollarSign, RefreshCw } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useNotifications } from '../../hooks/useNotifications';
 import { supabase } from '../../supabaseClient';
@@ -14,24 +14,25 @@ const AdminUsers = () => {
   const { notifySuccess, notifyError } = useNotifications();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   
   const [selectedUser, setSelectedUser] = useState(null);
   const [amount, setAmount] = useState('');
   const [actionType, setActionType] = useState('add');
   const [processing, setProcessing] = useState(false);
 
-  const fetchUsers = async () => {
-    setLoading(true);
+  const fetchUsers = async (isManual = false) => {
+    if (isManual) setRefreshing(true);
+    else setLoading(true);
+
     try {
-      // ১. সব প্রোফাইল আনা
       const { data: profiles, error: pError } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
       if (pError) throw pError;
 
-      // ২. সব ওয়ালেট আনা
       const { data: wallets, error: wError } = await supabase.from('wallets').select('*');
       if (wError) throw wError;
 
-      // ৩. ম্যানুয়ালি মার্জ করা (যাতে জয়েনের কোনো এরর না হয়)
+      // ম্যানুয়ালি প্রোফাইলের সাথে ওয়ালেট মার্জ করা
       const merged = profiles.map(p => {
         const wallet = wallets.find(w => w.user_id === p.id);
         return { ...p, balance: wallet ? Number(wallet.balance) : 0 };
@@ -43,6 +44,7 @@ const AdminUsers = () => {
       notifyError('Failed to load users');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -76,7 +78,7 @@ const AdminUsers = () => {
       notifySuccess(`✅ Balance updated for ${selectedUser.email}`);
       setSelectedUser(null);
       setAmount('');
-      fetchUsers();
+      fetchUsers(true);
     } catch (err) {
       console.error(err);
       notifyError('Failed to update balance');
@@ -92,7 +94,9 @@ const AdminUsers = () => {
           <h1 className="text-2xl font-bold text-white flex items-center gap-2"><Users className="w-6 h-6" /> {t('manageUsers') || 'Manage Users'}</h1>
           <p className="text-white/70 text-sm">{users.length} users</p>
         </div>
-        <button onClick={fetchUsers} className="px-3 py-1.5 bg-white/10 text-white rounded-lg text-sm">Refresh</button>
+        <button onClick={() => fetchUsers(true)} className="flex items-center gap-2 px-3 py-1.5 bg-white/10 text-white rounded-lg text-sm hover:bg-white/20 transition">
+          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} /> Refresh
+        </button>
       </div>
 
       {loading ? <div className="gaming-card p-8 text-center text-gray-500">Loading...</div> : (

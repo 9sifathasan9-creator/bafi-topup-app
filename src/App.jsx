@@ -7,6 +7,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 
 import Navbar from './components/common/Navbar';
+import ScrollToTop from './components/common/ScrollToTop';
 import Footer from './components/common/Footer';
 import BottomNav from './components/common/BottomNav';
 import ErrorBoundary from './components/common/ErrorBoundary';
@@ -93,6 +94,7 @@ function App() {
             <AuthProvider>
               <CartProvider>
                 <BrowserRouter>
+                  <ScrollToTop />
                   <NotificationToast position="top-right" />
                   <PWAInstall />
                   <Routes>
