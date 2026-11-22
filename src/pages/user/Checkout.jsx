@@ -5,6 +5,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useWallet } from '../../hooks/useWallet';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useOrders } from '../../hooks/useOrders';
+import { supabase } from '../../supabaseClient';
 import { formatBDT } from '../../utils/formatters';
 import { ROUTES } from '../../utils/constants';
 import Card from '../../components/ui/Card';
@@ -17,7 +18,6 @@ const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { balance, deductForPurchase, refresh: refreshWallet } = useWallet();
-  const { createOrder } = useOrders();
   const { notifySuccess, notifyError } = useNotifications();
   
   const [processing, setProcessing] = useState(false);
@@ -45,29 +45,43 @@ const Checkout = () => {
     await new Promise(r => setTimeout(r, 1500));
 
     try {
-      const orderResult = await createOrder({ 
-        gameId, 
-        gameName: packageData.name, 
-        playerId: playerId.trim(), 
-        amount: packageData.price, 
-        quantity: 1, 
-        paymentMethod: 'wallet',
-        notes: packageData.name
-      });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not found');
 
-      if (orderResult.success) {
-        const deductResult = await deductForPurchase(packageData.price, orderResult.order.id);
-        if (!deductResult.success) throw new Error(deductResult.error);
-        
-        await refreshWallet();
-        notifySuccess('Order placed successfully! Pending admin approval.');
-        navigate(ROUTES.ORDERS);
-      } else {
-        throw new Error(orderResult.error || 'Order creation failed');
+      // সরাসরি Supabase-এ অর্ডার তৈরি (এরর ট্র্যাকিং সহ)
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          game_id: gameId,
+          game_name: packageData.name,
+          player_id: playerId.trim(),
+          amount: packageData.price,
+          quantity: 1,
+          payment_method: 'wallet',
+          status: 'pending',
+          notes: packageData.name
+        })
+        .select()
+        .single();
+
+      if (orderError) {
+        throw new Error(`Order Error: ${orderError.message}`);
       }
+
+      // ব্যালেন্স কাটা
+      const deductResult = await deductForPurchase(packageData.price, orderData.id);
+      if (!deductResult.success) {
+        throw new Error(`Balance Error: ${deductResult.error}`);
+      }
+
+      await refreshWallet();
+      notifySuccess('Order placed successfully! Pending admin approval.');
+      navigate(ROUTES.ORDERS);
+
     } catch (err) {
       console.error('Checkout Error:', err);
-      notifyError(err.message || 'Topup failed');
+      notifyError(err.message || 'Failed to create order');
     } finally {
       setProcessing(false);
     }
