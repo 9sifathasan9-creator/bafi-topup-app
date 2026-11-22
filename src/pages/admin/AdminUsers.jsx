@@ -22,15 +22,38 @@ const AdminUsers = () => {
 
   const fetchUsers = async () => {
     setLoading(true);
-    // ডাটাবেসের সাথে জয়েন ঠিকমতো করা হলো
-    const { data, error } = await supabase.from('profiles').select(`
-      *,
-      wallets (balance)
-    `).order('created_at', { ascending: false });
-    
-    if (error) console.error("Fetch Users Error:", error);
-    setUsers(data || []);
-    setLoading(false);
+    try {
+      // ১. প্রথমে সব প্রোফাইল আনা
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (profileError) throw profileError;
+
+      // ২. সব ওয়ালেট আনা
+      const { data: wallets, error: walletError } = await supabase
+        .from('wallets')
+        .select('*');
+        
+      if (walletError) throw walletError;
+
+      // ৩. প্রোফাইলের সাথে ওয়ালেটের ব্যালেন্স মিলিয়ে নেওয়া
+      const mergedUsers = profiles.map(profile => {
+        const userWallet = wallets.find(w => w.user_id === profile.id);
+        return {
+          ...profile,
+          balance: userWallet ? Number(userWallet.balance) : 0
+        };
+      });
+
+      setUsers(mergedUsers);
+    } catch (err) {
+      console.error("Fetch Users Error:", err);
+      notifyError('Failed to load users');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchUsers(); }, []);
@@ -40,12 +63,12 @@ const AdminUsers = () => {
     setProcessing(true);
 
     try {
-      const currentBalance = selectedUser.wallets?.[0]?.balance || 0;
+      const currentBalance = selectedUser.balance || 0;
       const newBalance = actionType === 'add' 
         ? currentBalance + Number(amount) 
         : Math.max(0, currentBalance - Number(amount));
 
-      // ওয়ালেট আপডেট
+      // ওয়ালেট আপডেট (আগে থেকে থাকলে আপডেট, না থাকলে ইনসার্ট)
       const { error: walletError } = await supabase
         .from('wallets')
         .upsert({ user_id: selectedUser.id, balance: newBalance }, { onConflict: 'user_id' });
@@ -102,7 +125,7 @@ const AdminUsers = () => {
               <p className="text-xs text-gray-500 dark:text-gray-400">User</p>
               <p className="text-sm font-bold text-gray-800 dark:text-white">{selectedUser.email}</p>
               <p className="text-xs text-purple-600 dark:text-purple-400 mt-1 font-bold">
-                Current Balance: {formatBDT(selectedUser.wallets?.[0]?.balance || 0)}
+                Current Balance: {formatBDT(selectedUser.balance)}
               </p>
             </div>
 
