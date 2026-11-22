@@ -31,13 +31,16 @@ const PinSetupModal = ({ isOpen, user, onSuccess }) => {
         .update({ transaction_pin: pin })
         .eq('id', user.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        // আসল এরর মেসেজটি দেখানো হচ্ছে
+        throw new Error(updateError.message);
+      }
 
       notifySuccess('Transaction PIN set successfully!');
       onSuccess();
     } catch (err) {
-      console.error(err);
-      setError('Failed to save PIN. Please try again.');
+      console.error('PIN Save Error:', err);
+      setError(err.message || 'Failed to save PIN. Please try again.');
     } finally {
       setLoading(false);
     }
