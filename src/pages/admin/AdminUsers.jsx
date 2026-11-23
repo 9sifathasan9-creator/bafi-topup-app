@@ -5,6 +5,7 @@ import { useNotifications } from '../../hooks/useNotifications';
 import { supabase } from '../../supabaseClient';
 import { formatBDT } from '../../utils/formatters';
 import UserTable from '../../components/admin/UserTable';
+import UserDetailsModal from '../../components/admin/UserDetailsModal';
 import Modal from '../../components/ui/Modal';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
@@ -16,7 +17,11 @@ const AdminUsers = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   
-  const [selectedUser, setSelectedUser] = useState(null);
+  // Details Modal State
+  const [selectedUserDetails, setSelectedUserDetails] = useState(null);
+  // Edit Wallet State
+  const [selectedUserEdit, setSelectedUserEdit] = useState(null);
+  
   const [amount, setAmount] = useState('');
   const [actionType, setActionType] = useState('add');
   const [processing, setProcessing] = useState(false);
@@ -26,28 +31,14 @@ const AdminUsers = () => {
     else setLoading(true);
 
     try {
-      // ১. প্রোফাইল আনা
-      const { data: profiles, error: pError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data: profiles, error: pError } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
       if (pError) throw pError;
 
-      // ২. ওয়ালেট আলাদাভাবে আনা
-      const { data: wallets, error: wError } = await supabase
-        .from('wallets')
-        .select('*');
-      if (wError) {
-        console.warn("Wallet fetch error (RLS issue?):", wError);
-      }
-
-      // ৩. প্রোফাইলের সাথে ম্যানুয়ালি মার্জ করা
+      const { data: wallets, error: wError } = await supabase.from('wallets').select('*');
+      
       const merged = profiles.map(p => {
         const wallet = wallets?.find(w => w.user_id === p.id);
-        return { 
-          ...p, 
-          balance: wallet ? Number(wallet.balance) : 0 
-        };
+        return { ...p, balance: wallet ? Number(wallet.balance) : 0 };
       });
 
       setUsers(merged);
@@ -67,19 +58,19 @@ const AdminUsers = () => {
     setProcessing(true);
 
     try {
-      const currentBalance = selectedUser.balance || 0;
+      const currentBalance = selectedUserEdit.balance || 0;
       const newBalance = actionType === 'add' 
         ? currentBalance + Number(amount) 
         : Math.max(0, currentBalance - Number(amount));
 
       const { error: walletError } = await supabase
         .from('wallets')
-        .upsert({ user_id: selectedUser.id, balance: newBalance }, { onConflict: 'user_id' });
+        .upsert({ user_id: selectedUserEdit.id, balance: newBalance }, { onConflict: 'user_id' });
         
       if (walletError) throw walletError;
 
       await supabase.from('transactions').insert({
-        user_id: selectedUser.id,
+        user_id: selectedUserEdit.id,
         type: actionType === 'add' ? 'bonus' : 'withdrawal',
         amount: actionType === 'add' ? Number(amount) : -Number(amount),
         reference: 'Admin Adjustment',
@@ -87,8 +78,8 @@ const AdminUsers = () => {
         balance_after: newBalance,
       });
 
-      notifySuccess(`✅ Balance updated for ${selectedUser.email}`);
-      setSelectedUser(null);
+      notifySuccess(`✅ Balance updated for ${selectedUserEdit.email}`);
+      setSelectedUserEdit(null);
       setAmount('');
       fetchUsers(true);
     } catch (err) {
@@ -112,26 +103,37 @@ const AdminUsers = () => {
       </div>
 
       {loading ? <div className="gaming-card p-8 text-center text-gray-500">Loading...</div> : (
-        <UserTable users={users} onEditWallet={(user) => setSelectedUser(user)} />
+        <UserTable 
+          users={users} 
+          onViewDetails={(user) => setSelectedUserDetails(user)}
+        />
       )}
 
-      <Modal isOpen={!!selectedUser} onClose={() => setSelectedUser(null)} title="Manage User Wallet">
-        {selectedUser && (
+      {/* User Details Modal */}
+      <UserDetailsModal 
+        isOpen={!!selectedUserDetails} 
+        onClose={() => setSelectedUserDetails(null)} 
+        user={selectedUserDetails} 
+      />
+
+      {/* Edit Wallet Modal */}
+      <Modal isOpen={!!selectedUserEdit} onClose={() => setSelectedUserEdit(null)} title="Adjust Balance">
+        {selectedUserEdit && (
           <div className="space-y-4">
             <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <p className="text-xs text-gray-500 dark:text-gray-400">User</p>
-              <p className="text-sm font-bold text-gray-800 dark:text-white">{selectedUser.email}</p>
-              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1 font-bold">Current Balance: {formatBDT(selectedUser.balance)}</p>
+              <p className="text-sm font-bold text-gray-800 dark:text-white">{selectedUserEdit.email}</p>
+              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1 font-bold">Current: {formatBDT(selectedUserEdit.balance)}</p>
             </div>
 
             <div className="flex gap-2">
-              <button onClick={() => setActionType('add')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition ${actionType === 'add' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>+ Add Money</button>
+              <button onClick={() => setActionType('add')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition ${actionType === 'add' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>+ Add</button>
               <button onClick={() => setActionType('subtract')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition ${actionType === 'subtract' ? 'bg-red-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>- Deduct</button>
             </div>
 
             <Input label="Amount (BDT)" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="e.g. 500" leftIcon={DollarSign} />
 
-            <Button onClick={handleUpdateBalance} loading={processing} disabled={!amount || Number(amount) <= 0} fullWidth>Confirm {actionType === 'add' ? 'Addition' : 'Deduction'}</Button>
+            <Button onClick={handleUpdateBalance} loading={processing} disabled={!amount || Number(amount) <= 0} fullWidth>Confirm</Button>
           </div>
         )}
       </Modal>
