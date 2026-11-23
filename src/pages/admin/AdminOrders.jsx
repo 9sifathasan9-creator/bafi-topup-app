@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, Clock, Copy, Check } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useNotifications } from '../../hooks/useNotifications';
 import { supabase } from '../../supabaseClient';
-import { formatBDT, formatDate, formatOrderId } from '../../utils/formatters';
+import { formatBDT, formatOrderId } from '../../utils/formatters';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
+import TransactionDetails from '../../components/admin/TransactionDetails';
 
 const AdminOrders = () => {
   const { t } = useLanguage();
@@ -15,6 +16,7 @@ const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [copiedId, setCopiedId] = useState('');
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -34,7 +36,6 @@ const AdminOrders = () => {
       setSelectedOrder(null);
       fetchOrders();
     } catch (err) {
-      console.error(err);
       notifyError('Failed to update order status');
     }
   };
@@ -86,21 +87,10 @@ const AdminOrders = () => {
         </div>
       )}
 
-      {/* Details & Status Update Modal */}
       <Modal isOpen={!!selectedOrder} onClose={() => setSelectedOrder(null)} title="Order Details" size="md">
         {selectedOrder && (
           <div className="space-y-4">
-            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <p className="text-xs text-gray-500 mb-1">Order ID</p>
-              <p className="font-mono font-bold text-gray-800 dark:text-white">{selectedOrder.id}</p>
-              <p className="text-xs text-gray-500 mt-2 mb-1">Game / Package</p>
-              <p className="font-bold text-gray-800 dark:text-white">{selectedOrder.notes || selectedOrder.game_name}</p>
-              <p className="text-xs text-gray-500 mt-2 mb-1">Player ID</p>
-              <p className="font-bold text-gray-800 dark:text-white">{selectedOrder.player_id}</p>
-              <p className="text-xs text-gray-500 mt-2 mb-1">Amount</p>
-              <p className="font-bold text-purple-600 text-lg">{formatBDT(selectedOrder.amount)}</p>
-            </div>
-
+            <TransactionDetails tx={selectedOrder} type="order" />
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
               <p className="text-sm font-bold mb-3">Update Status:</p>
               <div className="grid grid-cols-2 gap-2">
@@ -116,5 +106,4 @@ const AdminOrders = () => {
     </div>
   );
 };
-
 export default AdminOrders;
