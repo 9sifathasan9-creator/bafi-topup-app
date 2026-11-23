@@ -4,7 +4,6 @@ import { ArrowLeft, ShieldCheck, User } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useWallet } from '../../hooks/useWallet';
 import { useNotifications } from '../../hooks/useNotifications';
-import { useOrders } from '../../hooks/useOrders';
 import { supabase } from '../../supabaseClient';
 import { formatBDT } from '../../utils/formatters';
 import { ROUTES } from '../../utils/constants';
@@ -27,9 +26,7 @@ const Checkout = () => {
   const { gameId, packageData } = location.state || {};
 
   useEffect(() => {
-    if (!gameId || !packageData) {
-      navigate('/games');
-    }
+    if (!gameId || !packageData) navigate('/games');
   }, [gameId, packageData, navigate]);
 
   const handlePlaceOrder = () => {
@@ -48,7 +45,7 @@ const Checkout = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not found');
 
-      // সরাসরি Supabase-এ অর্ডার তৈরি (এরর ট্র্যাকিং সহ)
+      // ১. অর্ডার তৈরি
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -62,21 +59,24 @@ const Checkout = () => {
           status: 'pending',
           notes: packageData.name
         })
-        .select()
-        .single();
+        .select().single();
 
-      if (orderError) {
-        throw new Error(`Order Error: ${orderError.message}`);
-      }
+      if (orderError) throw new Error(`Order Error: ${orderError.message}`);
 
-      // ব্যালেন্স কাটা
+      // ২. ব্যালেন্স কাটা
       const deductResult = await deductForPurchase(packageData.price, orderData.id);
-      if (!deductResult.success) {
-        throw new Error(`Balance Error: ${deductResult.error}`);
-      }
+      if (!deductResult.success) throw new Error(deductResult.error);
+
+      // ৩. UID অটো-সেভ করা
+      await supabase.from('saved_uids').upsert({
+        user_id: user.id,
+        game_id: gameId,
+        game_name: packageData.name,
+        player_uid: playerId.trim()
+      }, { onConflict: 'user_id, game_id, player_uid' });
 
       await refreshWallet();
-      notifySuccess('Order placed successfully! Pending admin approval.');
+      notifySuccess('Order placed successfully!');
       navigate(ROUTES.ORDERS);
 
     } catch (err) {
