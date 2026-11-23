@@ -26,16 +26,28 @@ const AdminUsers = () => {
     else setLoading(true);
 
     try {
-      const { data: profiles, error: pError } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+      // ১. প্রোফাইল আনা
+      const { data: profiles, error: pError } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
       if (pError) throw pError;
 
-      const { data: wallets, error: wError } = await supabase.from('wallets').select('*');
-      if (wError) throw wError;
+      // ২. ওয়ালেট আলাদাভাবে আনা
+      const { data: wallets, error: wError } = await supabase
+        .from('wallets')
+        .select('*');
+      if (wError) {
+        console.warn("Wallet fetch error (RLS issue?):", wError);
+      }
 
-      // ম্যানুয়ালি প্রোফাইলের সাথে ওয়ালেট মার্জ করা
+      // ৩. প্রোফাইলের সাথে ম্যানুয়ালি মার্জ করা
       const merged = profiles.map(p => {
-        const wallet = wallets.find(w => w.user_id === p.id);
-        return { ...p, balance: wallet ? Number(wallet.balance) : 0 };
+        const wallet = wallets?.find(w => w.user_id === p.id);
+        return { 
+          ...p, 
+          balance: wallet ? Number(wallet.balance) : 0 
+        };
       });
 
       setUsers(merged);
