@@ -16,7 +16,7 @@ const Checkout = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
-  const { balance, deductForPurchase, refresh: refreshWallet } = useWallet();
+  const { balance, refresh: refreshWallet } = useWallet();
   const { notifySuccess, notifyError } = useNotifications();
   
   const [processing, setProcessing] = useState(false);
@@ -45,7 +45,7 @@ const Checkout = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not found');
 
-      // ১. অর্ডার তৈরি
+      // শুধু অর্ডার তৈরি হবে (টাকা কাটা হবে না)
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -63,11 +63,7 @@ const Checkout = () => {
 
       if (orderError) throw new Error(`Order Error: ${orderError.message}`);
 
-      // ২. ব্যালেন্স কাটা
-      const deductResult = await deductForPurchase(packageData.price, orderData.id);
-      if (!deductResult.success) throw new Error(deductResult.error);
-
-      // ৩. UID অটো-সেভ করা
+      // UID অটো-সেভ করা
       await supabase.from('saved_uids').upsert({
         user_id: user.id,
         game_id: gameId,
@@ -75,8 +71,7 @@ const Checkout = () => {
         player_uid: playerId.trim()
       }, { onConflict: 'user_id, game_id, player_uid' });
 
-      await refreshWallet();
-      notifySuccess('Order placed successfully!');
+      notifySuccess('Order placed! Waiting for admin approval.');
       navigate(ROUTES.ORDERS);
 
     } catch (err) {
@@ -127,6 +122,7 @@ const Checkout = () => {
             <div>
               <p className="text-sm font-bold">Pay from Wallet</p>
               <p className="text-xs text-purple-600">Available: {formatBDT(balance)}</p>
+              <p className="text-[10px] text-gray-500 mt-1">*Balance will be deducted after admin approval.</p>
             </div>
           </label>
         </Card>

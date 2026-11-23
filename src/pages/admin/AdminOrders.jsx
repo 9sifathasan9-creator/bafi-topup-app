@@ -3,12 +3,12 @@ import { Eye, CheckCircle, XCircle, Clock, Copy, Check } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useNotifications } from '../../hooks/useNotifications';
 import { supabase } from '../../supabaseClient';
-import { formatBDT, formatOrderId } from '../../utils/formatters';
+import { doCopy } from '../../supabaseClient';
+import { formatBDT, formatDate, formatOrderId } from '../../utils/formatters';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
-import TransactionDetails from '../../components/admin/TransactionDetails';
 
 const AdminOrders = () => {
   const { t } = useLanguage();
@@ -16,7 +16,7 @@ const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [copiedId, setCopiedId] = useState('');
+  const [copiedField, setCopiedField] = useState('');
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -32,13 +32,25 @@ const AdminOrders = () => {
     try {
       const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', id);
       if (error) throw error;
-      notifySuccess(`Order status updated to ${newStatus}`);
+      notifySuccess(`Order marked as ${newStatus}`);
       setSelectedOrder(null);
       fetchOrders();
     } catch (err) {
       notifyError('Failed to update order status');
     }
   };
+
+  const handleCopy = (text, field) => {
+    doCopy(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(''), 2000);
+  };
+
+  const CopyBtn = ({ text, field }) => (
+    <button onClick={() => handleCopy(text, field)} className="ml-2 p-1 text-gray-400 hover:text-purple-500 transition">
+      {copiedField === field ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+    </button>
+  );
 
   const getStatusBadge = (status) => {
     if (status === 'completed' || status === 'success') return <Badge variant="success" size="sm">Success</Badge>;
@@ -87,10 +99,43 @@ const AdminOrders = () => {
         </div>
       )}
 
+      {/* বিস্তারিত মডাল */}
       <Modal isOpen={!!selectedOrder} onClose={() => setSelectedOrder(null)} title="Order Details" size="md">
         {selectedOrder && (
           <div className="space-y-4">
-            <TransactionDetails tx={selectedOrder} type="order" />
+            <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700 space-y-2 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">User ID</span>
+                <div className="flex items-center">
+                  <span className="font-mono font-bold text-gray-800 dark:text-gray-200 text-xs truncate max-w-[120px]">{selectedOrder.user_id}</span>
+                  <CopyBtn text={selectedOrder.user_id} field="userId" />
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Order ID</span>
+                <div className="flex items-center">
+                  <span className="font-mono font-bold text-purple-600 text-xs">{formatOrderId(selectedOrder.id)}</span>
+                  <CopyBtn text={selectedOrder.id} field="orderId" />
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Game / Package</span>
+                <span className="font-bold text-gray-800 dark:text-white text-xs">{selectedOrder.notes || selectedOrder.game_name}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Player UID</span>
+                <span className="font-mono font-bold text-gray-800 dark:text-white text-xs">{selectedOrder.player_id}</span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
+                <span className="text-gray-500">Amount</span>
+                <span className="font-bold text-green-600">{formatBDT(selectedOrder.amount)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Date</span>
+                <span className="text-xs text-gray-600">{formatDate(selectedOrder.created_at)}</span>
+              </div>
+            </div>
+
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
               <p className="text-sm font-bold mb-3">Update Status:</p>
               <div className="grid grid-cols-2 gap-2">
