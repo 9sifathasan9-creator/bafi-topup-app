@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle, XCircle, Wallet, RefreshCw, Eye, Copy, Check } from 'lucide-react';
-import { useLanguage } from '../../context/LanguageContext';
 import { useNotifications } from '../../hooks/useNotifications';
 import { supabase, doCopy } from '../../supabaseClient';
 import { formatBDT, formatDateTime } from '../../utils/formatters';
@@ -10,7 +9,6 @@ import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 
 const AdminDeposits = () => {
-  const { t } = useLanguage();
   const { notifySuccess, notifyError } = useNotifications();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +27,6 @@ const AdminDeposits = () => {
 
   const handleApprove = async (txId) => {
     try {
-      // RPC কল করে ডিপোজিট অ্যাপ্রুভ করা
       const { error } = await supabase.rpc('approve_deposit', { tx_id: txId });
       if (error) throw error;
       notifySuccess('Deposit Approved & Balance Added!');
