@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Eye, CheckCircle, XCircle, Clock, Copy, Check } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useNotifications } from '../../hooks/useNotifications';
-import { supabase } from '../../supabaseClient';
-import { doCopy } from '../../supabaseClient';
+import { supabase, doCopy } from '../../supabaseClient';
 import { formatBDT, formatDate, formatOrderId } from '../../utils/formatters';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
@@ -28,15 +27,22 @@ const AdminOrders = () => {
 
   useEffect(() => { fetchOrders(); }, []);
 
-  const handleUpdateStatus = async (id, newStatus) => {
+  const handleUpdateStatus = async (orderId, newStatus) => {
     try {
-      const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', id);
-      if (error) throw error;
-      notifySuccess(`Order marked as ${newStatus}`);
+      if (newStatus === 'completed') {
+        // RPC কল করে অর্ডার অ্যাপ্রুভ ও ব্যালেন্স কাটা
+        const { error } = await supabase.rpc('approve_order', { order_id: orderId });
+        if (error) throw error;
+        notifySuccess('Order Approved & Balance Deducted!');
+      } else {
+        await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
+        notifySuccess(`Order status updated to ${newStatus}`);
+      }
       setSelectedOrder(null);
       fetchOrders();
     } catch (err) {
-      notifyError('Failed to update order status');
+      console.error(err);
+      notifyError(err.message || 'Failed to update order status');
     }
   };
 
@@ -99,7 +105,6 @@ const AdminOrders = () => {
         </div>
       )}
 
-      {/* বিস্তারিত মডাল */}
       <Modal isOpen={!!selectedOrder} onClose={() => setSelectedOrder(null)} title="Order Details" size="md">
         {selectedOrder && (
           <div className="space-y-4">
@@ -119,8 +124,12 @@ const AdminOrders = () => {
                 </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-500">Game / Package</span>
-                <span className="font-bold text-gray-800 dark:text-white text-xs">{selectedOrder.notes || selectedOrder.game_name}</span>
+                <span className="text-gray-500">Game</span>
+                <span className="font-bold text-gray-800 dark:text-white text-xs">{selectedOrder.game_name}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Item/Package</span>
+                <span className="font-bold text-gray-800 dark:text-white text-xs">{selectedOrder.notes}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">Player UID</span>
