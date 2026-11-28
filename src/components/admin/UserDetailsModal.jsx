@@ -16,11 +16,7 @@ const UserDetailsModal = ({ isOpen, onClose, user }) => {
     if (isOpen && user) {
       const fetchTx = async () => {
         setLoading(true);
-        const { data } = await supabase
-          .from('transactions')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+        const { data } = await supabase.from('transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
         setTransactions(data || []);
         setLoading(false);
       };
@@ -51,7 +47,6 @@ const UserDetailsModal = ({ isOpen, onClose, user }) => {
           </button>
 
           <div className="space-y-6">
-            {/* প্রোফাইল */}
             <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700">
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-2xl font-bold">
                 {user.email?.charAt(0).toUpperCase()}
@@ -66,7 +61,6 @@ const UserDetailsModal = ({ isOpen, onClose, user }) => {
               </div>
             </div>
 
-            {/* ওয়ালেট ও পিন */}
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800">
                 <div className="flex items-center gap-2 mb-2"><Wallet className="w-5 h-5 text-green-600" /><p className="text-xs font-bold text-green-700 dark:text-green-300">Wallet Balance</p></div>
@@ -81,7 +75,6 @@ const UserDetailsModal = ({ isOpen, onClose, user }) => {
               </div>
             </div>
 
-            {/* ট্রানজেকশন লিস্ট */}
             <div>
               <h3 className="text-sm font-bold text-gray-800 dark:text-white mb-3 flex items-center gap-2"><Receipt className="w-4 h-4 text-gray-500" /> Transaction History</h3>
               {loading ? <p className="text-center text-gray-500 text-sm py-4">Loading...</p> : transactions.length === 0 ? (
@@ -112,7 +105,6 @@ const UserDetailsModal = ({ isOpen, onClose, user }) => {
         </div>
       </Modal>
 
-      {/* ট্রানজেকশন ডিটেইলস মডাল */}
       <Modal isOpen={!!selectedTx} onClose={() => setSelectedTx(null)} title="Transaction Details" size="sm">
         {selectedTx && (
           <div className="space-y-3 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl text-sm">

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Eye, CheckCircle, XCircle, Clock, Copy, Check } from 'lucide-react';
-import { useLanguage } from '../../context/LanguageContext';
 import { useNotifications } from '../../hooks/useNotifications';
 import { supabase, doCopy } from '../../supabaseClient';
 import { formatBDT, formatDate, formatOrderId } from '../../utils/formatters';
@@ -10,7 +9,6 @@ import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 
 const AdminOrders = () => {
-  const { t } = useLanguage();
   const { notifySuccess, notifyError } = useNotifications();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +28,6 @@ const AdminOrders = () => {
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
       if (newStatus === 'completed') {
-        // RPC কল করে অর্ডার অ্যাপ্রুভ ও ব্যালেন্স কাটা
         const { error } = await supabase.rpc('approve_order', { order_id: orderId });
         if (error) throw error;
         notifySuccess('Order Approved & Balance Deducted!');
