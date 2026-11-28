@@ -16,7 +16,7 @@ const Checkout = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
-  const { balance, refresh: refreshWallet } = useWallet();
+  const { balance, deductForPurchase, refresh: refreshWallet } = useWallet();
   const { notifySuccess, notifyError } = useNotifications();
   
   const [processing, setProcessing] = useState(false);
@@ -45,13 +45,22 @@ const Checkout = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not found');
 
-      // শুধু অর্ডার তৈরি হবে (টাকা কাটা হবে না)
+      // ১. গেমের নাম বের করা
+      const { data: gameData } = await supabase
+        .from('games')
+        .select('name')
+        .eq('id', gameId)
+        .single();
+
+      const gameName = gameData?.name || 'Game';
+
+      // ২. অর্ডার তৈরি
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
           user_id: user.id,
           game_id: gameId,
-          game_name: packageData.name,
+          game_name: gameName,
           player_id: playerId.trim(),
           amount: packageData.price,
           quantity: 1,
@@ -63,15 +72,26 @@ const Checkout = () => {
 
       if (orderError) throw new Error(`Order Error: ${orderError.message}`);
 
-      // UID অটো-সেভ করা
+      // ৩. ব্যালেন্স কাটা (gameName ও packageName সহ)
+      const deductResult = await deductForPurchase(
+        packageData.price, 
+        orderData.id, 
+        gameName, 
+        packageData.name
+      );
+      
+      if (!deductResult.success) throw new Error(deductResult.error);
+
+      // ৪. UID অটো-সেভ করা
       await supabase.from('saved_uids').upsert({
         user_id: user.id,
         game_id: gameId,
-        game_name: packageData.name,
+        game_name: gameName,
         player_uid: playerId.trim()
       }, { onConflict: 'user_id, game_id, player_uid' });
 
-      notifySuccess('Order placed! Waiting for admin approval.');
+      await refreshWallet();
+      notifySuccess('Order placed successfully!');
       navigate(ROUTES.ORDERS);
 
     } catch (err) {

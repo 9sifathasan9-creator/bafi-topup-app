@@ -43,11 +43,7 @@ export const useWallet = () => {
     try {
       const numAmount = Number(amount);
       const newBalance = balance + numAmount;
-      
-      // ১. ব্যালেন্স আপডেট
       await updateWallet(user.id, newBalance);
-      
-      // ২. ট্রানজেকশন রেকর্ড
       await addTransaction({
         user_id: user.id,
         type: 'deposit',
@@ -56,17 +52,16 @@ export const useWallet = () => {
         status: 'completed',
         balance_after: newBalance
       });
-      
       setBalance(newBalance);
-      await fetchWallet(); // রিফ্রেশ
+      await fetchWallet();
       return { success: true };
     } catch (err) {
-      console.error('Add money error:', err);
       return { success: false, error: err.message };
     }
   };
 
-  const deductForPurchase = async (amount, orderId) => {
+  // ➕ Purchase (game_name এবং package_name সহ)
+  const deductForPurchase = async (amount, orderId, gameName = '', packageName = '') => {
     if (!user?.id) return { success: false, error: 'Not logged in' };
     try {
       const numAmount = Number(amount);
@@ -78,7 +73,8 @@ export const useWallet = () => {
         user_id: user.id,
         type: 'purchase',
         amount: -numAmount,
-        reference: orderId,
+        reference: packageName || orderId,
+        game_name: gameName,
         status: 'completed',
         balance_after: newBalance
       });
