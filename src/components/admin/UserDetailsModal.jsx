@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Eye, EyeOff, Wallet, Receipt, Lock, ArrowUpRight, ArrowDownLeft, Hash, Phone, Copy, Check, User } from 'lucide-react';
+import { X, Eye, EyeOff, Wallet, Receipt, Lock, ArrowUpRight, ArrowDownLeft, Copy, Check } from 'lucide-react';
 import { supabase, doCopy } from '../../supabaseClient';
 import { formatBDT, formatDateTime } from '../../utils/formatters';
 import Modal from '../ui/Modal';
@@ -9,7 +9,7 @@ const UserDetailsModal = ({ isOpen, onClose, user }) => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showPin, setShowPin] = useState(false);
-  const [selectedTx, setSelectedTx] = useState(null); // ডিটেইলস দেখার জন্য
+  const [selectedTx, setSelectedTx] = useState(null);
   const [copiedField, setCopiedField] = useState('');
 
   useEffect(() => {
@@ -112,10 +112,12 @@ const UserDetailsModal = ({ isOpen, onClose, user }) => {
         </div>
       </Modal>
 
-      {/* ট্রানজেকশন ডিটেইলস মডাল */}
+      {/* ট্রানজেকশন ডিটেইলস মডাল (টাইপ অনুযায়ী আলাদা) */}
       <Modal isOpen={!!selectedTx} onClose={() => setSelectedTx(null)} title="Transaction Details" size="sm">
         {selectedTx && (
           <div className="space-y-3 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl text-sm">
+            
+            {/* সাধারণ তথ্য */}
             <div className="flex justify-between items-center">
               <span className="text-gray-500">User ID</span>
               <div className="flex items-center"><span className="font-mono text-xs text-gray-800 dark:text-gray-200 truncate max-w-[120px]">{selectedTx.user_id}</span><CopyBtn text={selectedTx.user_id} field="userId" /></div>
@@ -128,7 +130,26 @@ const UserDetailsModal = ({ isOpen, onClose, user }) => {
               <span className="text-gray-500">Type</span>
               <span className="font-bold uppercase text-xs text-gray-800 dark:text-white">{selectedTx.type}</span>
             </div>
-            
+
+            {/* Purchase (গেম কেনা) */}
+            {selectedTx.type === 'purchase' && (
+              <>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Game Name</span>
+                  <span className="font-bold text-gray-800 dark:text-white text-xs">{selectedTx.game_name || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Item Name</span>
+                  <span className="font-bold text-gray-800 dark:text-white text-xs">{selectedTx.reference || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Quantity</span>
+                  <span className="font-bold text-gray-800 dark:text-white text-xs">{selectedTx.amount ? 1 : 0}</span>
+                </div>
+              </>
+            )}
+
+            {/* Cash In (Deposit) */}
             {selectedTx.type === 'deposit' && (
               <>
                 <div className="flex justify-between items-center">
@@ -139,9 +160,14 @@ const UserDetailsModal = ({ isOpen, onClose, user }) => {
                   <span className="text-gray-500">Sender Number</span>
                   <div className="flex items-center"><span className="font-mono text-xs text-gray-800 dark:text-gray-200">{selectedTx.sender_number || 'N/A'}</span><CopyBtn text={selectedTx.sender_number || ''} field="sender" /></div>
                 </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Agent / TRX ID</span>
+                  <div className="flex items-center"><span className="font-mono text-xs text-gray-800 dark:text-gray-200">{selectedTx.reference || 'N/A'}</span><CopyBtn text={selectedTx.reference || ''} field="trx" /></div>
+                </div>
               </>
             )}
 
+            {/* Cash Out (Withdrawal) */}
             {selectedTx.type === 'withdrawal' && (
               <>
                 <div className="flex justify-between items-center">
@@ -149,19 +175,17 @@ const UserDetailsModal = ({ isOpen, onClose, user }) => {
                   <span className="font-bold uppercase text-xs text-gray-800 dark:text-white">{selectedTx.method}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Account Number</span>
-                  <div className="flex items-center"><span className="font-mono text-xs text-gray-800 dark:text-gray-200">{selectedTx.reference || 'N/A'}</span><CopyBtn text={selectedTx.reference || ''} field="account" /></div>
+                  <span className="text-gray-500">Receiver Number</span>
+                  <div className="flex items-center"><span className="font-mono text-xs text-gray-800 dark:text-gray-200">{selectedTx.reference || 'N/A'}</span><CopyBtn text={selectedTx.reference || ''} field="receiver" /></div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Agent TRX ID</span>
+                  <div className="flex items-center"><span className="font-mono text-xs text-gray-800 dark:text-gray-200">{selectedTx.agent_trx_id || 'N/A'}</span><CopyBtn text={selectedTx.agent_trx_id || ''} field="agentTrx" /></div>
                 </div>
               </>
             )}
 
-            {selectedTx.type === 'purchase' && (
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500">Order Ref</span>
-                <div className="flex items-center"><span className="font-mono text-xs text-gray-800 dark:text-gray-200">{selectedTx.reference || 'N/A'}</span><CopyBtn text={selectedTx.reference || ''} field="orderRef" /></div>
-              </div>
-            )}
-
+            {/* পরিমাণ ও স্ট্যাটাস */}
             <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
               <span className="text-gray-500">Amount</span>
               <span className={`font-bold text-base ${Number(selectedTx.amount) > 0 ? 'text-green-600' : 'text-red-600'}`}>{Number(selectedTx.amount) > 0 ? '+' : ''}{formatBDT(selectedTx.amount)}</span>
